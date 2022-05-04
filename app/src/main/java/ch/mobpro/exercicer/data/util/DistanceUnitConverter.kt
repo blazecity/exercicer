@@ -5,8 +5,11 @@ import ch.mobpro.exercicer.data.entity.DistanceUnit
 
 class DistanceUnitConverter {
     @TypeConverter
-    fun fromDistanceUnit(distanceUnit: DistanceUnit): String = distanceUnit.name
+    fun fromDistanceUnit(distanceUnit: DistanceUnit?): String? = distanceUnit?.name
 
     @TypeConverter
-    fun toDistanceUnit(distanceUnitName: String): DistanceUnit = DistanceUnit.valueOf(distanceUnitName)
+    fun toDistanceUnit(distanceUnitName: String?): DistanceUnit? {
+        if (distanceUnitName.isNullOrEmpty()) return null
+        return DistanceUnit.valueOf(distanceUnitName)
+    }
 }

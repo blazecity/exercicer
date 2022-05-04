@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface SportDao {
 
     @Insert
-    suspend fun insert(sport: Sport)
+    suspend fun insert(sport: Sport): Long
 
     @Delete
     suspend fun delete(sport: Sport)

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface GoalDao {
 
     @Insert
-    suspend fun insert(goal: Goal)
+    suspend fun insert(goal: Goal): Long
 
     @Delete
     suspend fun delete(goal: Goal)

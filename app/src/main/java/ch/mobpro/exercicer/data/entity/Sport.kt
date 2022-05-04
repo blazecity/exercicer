@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Sport(
-    @PrimaryKey(autoGenerate = true) val id: Int? = null,
+    @PrimaryKey(autoGenerate = true) val sportId: Long? = null,
     var name: String,
     var trainingType: TrainingType
 )

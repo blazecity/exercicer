@@ -5,8 +5,11 @@ import ch.mobpro.exercicer.data.entity.TrainingType
 
 class TrainingTypeConverter {
     @TypeConverter
-    fun fromTrainingType(trainingType: TrainingType): String = trainingType.name
+    fun fromTrainingType(trainingType: TrainingType?): String? = trainingType?.name
 
     @TypeConverter
-    fun toTrainingType(trainingTypeName: String): TrainingType = TrainingType.valueOf(trainingTypeName)
+    fun toTrainingType(trainingTypeName: String): TrainingType? {
+        if (trainingTypeName.isNullOrEmpty()) return null
+        return TrainingType.valueOf(trainingTypeName)
+    }
 }

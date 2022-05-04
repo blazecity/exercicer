@@ -24,21 +24,13 @@ import org.junit.runner.RunWith
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
-class SportEntityDbTest {
-    private lateinit var db: AppDatabase
+class SportEntityDbTest: TestDatabase() {
     private lateinit var sportDao: SportDao
 
     @Before
-    fun createDb() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        this.db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
-        this.sportDao = this.db.sportDao()
-    }
-
-    @After
-    @Throws(IOException::class)
-    fun closeDb() {
-        this.db.close()
+    override fun createDb() {
+        super.createDb()
+        this.sportDao = super.db.sportDao()
     }
 
     @Test
@@ -52,7 +44,6 @@ class SportEntityDbTest {
             var sportsFromDb = sportDao.getAll().first()
 
             // Assert
-            assertEquals("Jogging", sportsFromDb.first().name)
             assertEquals(1, sportsFromDb.size)
         }
     }
@@ -61,16 +52,16 @@ class SportEntityDbTest {
     fun testUpdateName() = runTest {
         // Arrange
         val sport = Sport(name = "Gym", trainingType = TrainingType.STRENGTH)
-
-        // Act
         sportDao.insert(sport)
         val sportFromDb = sportDao.getAll().first().first()
+
+        // Act
         sportFromDb.name = "Gym (Oberkörper)"
         sportDao.update(sportFromDb)
         val sportListAfterUpdate = sportDao.getAll().first()
 
         // Assert
-        assertEquals("Gym (Oberkörper)", sportListAfterUpdate.first().name)
+        assertEquals(sportFromDb, sportListAfterUpdate.first())
         assertEquals(1, sportListAfterUpdate.size)
     }
 
@@ -78,16 +69,16 @@ class SportEntityDbTest {
     fun testUpdateTrainingType() = runTest {
         // Arrange
         val sport = Sport(name = "Fussball", trainingType = TrainingType.STRENGTH)
-
-        // Act
         sportDao.insert(sport)
         val sportFromDb = sportDao.getAll().first().first()
+
+        // Act
         sportFromDb.trainingType = TrainingType.ENDURANCE
         sportDao.update(sportFromDb)
         val sportListAfterUpdate = sportDao.getAll().first()
 
         // Assert
-        assertEquals(TrainingType.ENDURANCE, sportListAfterUpdate.first().trainingType)
+        assertEquals(sportFromDb, sportListAfterUpdate.first())
         assertEquals(1, sportListAfterUpdate.size)
     }
 
@@ -95,10 +86,10 @@ class SportEntityDbTest {
     fun testDelete() = runTest {
         // Arrange
         val sport = Sport(name = "Schwimmen", trainingType = TrainingType.ENDURANCE)
-
-        // Act
         sportDao.insert(sport)
         val sportFromDb = sportDao.getAll().first().first()
+
+        // Act
         sportDao.delete(sportFromDb)
         val sportListAfterDeletion = sportDao.getAll().first()
 
