@@ -3,6 +3,7 @@ package ch.mobpro.exercicer.data.entity
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import java.time.LocalDate
 import java.util.*
 
 @Entity(
@@ -16,7 +17,7 @@ import java.util.*
 )
 data class Training(
     @PrimaryKey(autoGenerate = true) val trainingId: Long? = null,
-    var date: Date,
+    var date: LocalDate,
     var sportIdFkTraining: Long,
     var trainingTimeHour: Int? = null,
     var trainingTimeMinutes: Int? = null,

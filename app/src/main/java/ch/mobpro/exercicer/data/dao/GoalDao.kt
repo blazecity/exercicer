@@ -2,6 +2,7 @@ package ch.mobpro.exercicer.data.dao
 
 import androidx.room.*
 import ch.mobpro.exercicer.data.entity.Goal
+import ch.mobpro.exercicer.data.entity.Sport
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,6 +17,10 @@ interface GoalDao {
     @Update
     suspend fun update(goal: Goal)
 
-    @Query("SELECT * FROM goal")
-    fun getAll(): Flow<List<Goal>>
+    @Query(
+        "SELECT * " +
+                "FROM goal " +
+                "JOIN sport ON goal.sportIdFkGoal = sport.sportId"
+    )
+    fun getAll(): Flow<Map<Goal, Sport>>
 }

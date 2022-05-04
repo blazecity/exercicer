@@ -10,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDate
 import java.util.*
 
 @RunWith(AndroidJUnit4::class)
@@ -29,7 +30,7 @@ class RoomDbTrainingTest: TestDatabase() {
         // Arrange
         val sport = createTestSport()
         val sportId = sportDao.insert(sport)
-        val training = Training(date = Date(), sportIdFkTraining = sportId)
+        val training = Training(date = LocalDate.now(), sportIdFkTraining = sportId)
 
         // Act
         trainingDao.insert(training)
@@ -44,8 +45,13 @@ class RoomDbTrainingTest: TestDatabase() {
         // Arrange
         val sport = createTestSport()
         val sportId = sportDao.insert(sport)
-        val training1 = Training(date = Date(), sportIdFkTraining = sportId, remarks = "Training 1")
-        val training2 = Training(date = Date(), sportIdFkTraining = sportId, remarks = "Training 2")
+        val training1 = Training(date = LocalDate.now(),
+                                sportIdFkTraining = sportId,
+                                remarks = "Training 1")
+
+        val training2 = Training(date = LocalDate.now().plusDays(1),
+                                sportIdFkTraining = sportId,
+                                remarks = "Training 2")
 
         // Act
         trainingDao.insert(training1)
@@ -64,7 +70,10 @@ class RoomDbTrainingTest: TestDatabase() {
         // Arrange
         val sport = createTestSport()
         val sportId = sportDao.insert(sport)
-        val training = Training(date = Date(), sportIdFkTraining = sportId, remarks = "Before update")
+        val training = Training(date = LocalDate.now(),
+                                sportIdFkTraining = sportId,
+                                remarks = "Before update")
+
         trainingDao.insert(training)
         var trainingFromDb = trainingDao.getAll().first().keys.first()
 
@@ -86,7 +95,10 @@ class RoomDbTrainingTest: TestDatabase() {
         val sportTennis = createTestSport("Tennis")
         val sportGymId = sportDao.insert(sportGym)
         val sportTennisId = sportDao.insert(sportTennis)
-        val training = Training(date = Date(), sportIdFkTraining = sportGymId, remarks = "Gym exercises")
+        val training = Training(date = LocalDate.now(),
+                                sportIdFkTraining = sportGymId,
+                                remarks = "Gym exercises")
+
         trainingDao.insert(training)
         val trainingFromDb = trainingDao.getAll().first().keys.first()
 
@@ -107,7 +119,7 @@ class RoomDbTrainingTest: TestDatabase() {
         // Arrange
         val sport = createTestSport()
         val sportId = sportDao.insert(sport)
-        val training = Training(date = Date(), sportIdFkTraining = sportId)
+        val training = Training(date = LocalDate.now(), sportIdFkTraining = sportId)
         trainingDao.insert(training)
         val trainingFromDb = trainingDao.getAll().first().keys.first()
 

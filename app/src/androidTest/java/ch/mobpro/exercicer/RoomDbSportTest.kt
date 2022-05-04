@@ -1,27 +1,15 @@
 package ch.mobpro.exercicer
 
-import android.content.Context
-import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import ch.mobpro.exercicer.data.dao.SportDao
-import ch.mobpro.exercicer.data.db.AppDatabase
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class SportEntityDbTest: TestDatabase() {
