@@ -19,7 +19,7 @@ interface TrainingDao {
     @Query(
         "SELECT * " +
                 "FROM training " +
-                "JOIN sport ON training.sportIdFkTraining = sport.sportId"
+                "JOIN sport ON training.sportId = sport.id"
     )
     fun getAll(): Flow<Map<Training, Sport>>
 }

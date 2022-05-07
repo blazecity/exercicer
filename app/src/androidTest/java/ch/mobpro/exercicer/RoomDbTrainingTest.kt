@@ -3,6 +3,7 @@ package ch.mobpro.exercicer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import ch.mobpro.exercicer.data.dao.SportDao
 import ch.mobpro.exercicer.data.dao.TrainingDao
+import ch.mobpro.exercicer.data.dao.TrainingTypeDao
 import ch.mobpro.exercicer.data.entity.Training
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -11,26 +12,30 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.LocalDate
-import java.util.*
+
 
 @RunWith(AndroidJUnit4::class)
 class RoomDbTrainingTest: TestDatabase() {
     private lateinit var trainingDao: TrainingDao
     private lateinit var sportDao: SportDao
+    private lateinit var trainingTypeDao: TrainingTypeDao
 
     @Before
     override fun createDb() {
         super.createDb()
         this.trainingDao = super.db.trainingDao()
         this.sportDao = super.db.sportDao()
+        this.trainingTypeDao = super.db.trainingTypeDao()
     }
 
     @Test
     fun testInsert() = runTest {
         // Arrange
-        val sport = createTestSport()
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sport = createTestSport(trainingTypeId = trainingTypeId)
         val sportId = sportDao.insert(sport)
-        val training = Training(date = LocalDate.now(), sportIdFkTraining = sportId)
+        val training = Training(date = LocalDate.now(), sportId = sportId)
 
         // Act
         trainingDao.insert(training)
@@ -43,14 +48,16 @@ class RoomDbTrainingTest: TestDatabase() {
     @Test
     fun testInsertMultipleReferenceToSameSport() = runTest {
         // Arrange
-        val sport = createTestSport()
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sport = createTestSport(trainingTypeId = trainingTypeId)
         val sportId = sportDao.insert(sport)
         val training1 = Training(date = LocalDate.now(),
-                                sportIdFkTraining = sportId,
+                                sportId = sportId,
                                 remarks = "Training 1")
 
         val training2 = Training(date = LocalDate.now().plusDays(1),
-                                sportIdFkTraining = sportId,
+                                sportId = sportId,
                                 remarks = "Training 2")
 
         // Act
@@ -68,10 +75,12 @@ class RoomDbTrainingTest: TestDatabase() {
     @Test
     fun testUpdateTraining() = runTest {
         // Arrange
-        val sport = createTestSport()
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sport = createTestSport(trainingTypeId = trainingTypeId)
         val sportId = sportDao.insert(sport)
         val training = Training(date = LocalDate.now(),
-                                sportIdFkTraining = sportId,
+                                sportId = sportId,
                                 remarks = "Before update")
 
         trainingDao.insert(training)
@@ -91,19 +100,21 @@ class RoomDbTrainingTest: TestDatabase() {
     @Test
     fun testUpdateReferenceToDifferentSport() = runTest {
         // Arrange
-        val sportGym = createTestSport()
-        val sportTennis = createTestSport("Tennis")
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sportGym = createTestSport(trainingTypeId = trainingTypeId)
+        val sportTennis = createTestSport("Tennis", trainingTypeId = trainingTypeId)
         val sportGymId = sportDao.insert(sportGym)
         val sportTennisId = sportDao.insert(sportTennis)
         val training = Training(date = LocalDate.now(),
-                                sportIdFkTraining = sportGymId,
+                                sportId = sportGymId,
                                 remarks = "Gym exercises")
 
         trainingDao.insert(training)
         val trainingFromDb = trainingDao.getAll().first().keys.first()
 
         // Act
-        trainingFromDb.sportIdFkTraining = sportTennisId
+        trainingFromDb.sportId = sportTennisId
         trainingFromDb.remarks = "Tennis"
         trainingDao.update(trainingFromDb)
         val trainingMapAfterUpdate = trainingDao.getAll().first()
@@ -117,9 +128,11 @@ class RoomDbTrainingTest: TestDatabase() {
     @Test
     fun testDelete() = runTest {
         // Arrange
-        val sport = createTestSport()
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sport = createTestSport(trainingTypeId = trainingTypeId)
         val sportId = sportDao.insert(sport)
-        val training = Training(date = LocalDate.now(), sportIdFkTraining = sportId)
+        val training = Training(date = LocalDate.now(), sportId = sportId)
         trainingDao.insert(training)
         val trainingFromDb = trainingDao.getAll().first().keys.first()
 

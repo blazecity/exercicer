@@ -4,22 +4,20 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.time.LocalDate
-import java.util.*
-import kotlin.math.min
 
 @Entity(
     foreignKeys = [
         ForeignKey(
             entity = Sport::class,
-            parentColumns = ["sportId"],
-            childColumns = ["sportIdFkTraining"]
+            parentColumns = ["id"],
+            childColumns = ["sportId"]
         )
     ]
 )
 data class Training(
     @PrimaryKey(autoGenerate = true) val trainingId: Long? = null,
     var date: LocalDate,
-    var sportIdFkTraining: Long,
+    var sportId: Long,
     var trainingTimeHour: Int? = null,
     var trainingTimeMinutes: Int? = null,
     var trainingTimeSeconds: Int? = null,

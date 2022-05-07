@@ -8,18 +8,18 @@ import androidx.room.TypeConverters
 import ch.mobpro.exercicer.data.dao.GoalDao
 import ch.mobpro.exercicer.data.dao.SportDao
 import ch.mobpro.exercicer.data.dao.TrainingDao
+import ch.mobpro.exercicer.data.dao.TrainingTypeDao
 import ch.mobpro.exercicer.data.entity.Goal
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.Training
+import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.util.DateConverter
 import ch.mobpro.exercicer.data.util.DistanceUnitConverter
-import ch.mobpro.exercicer.data.util.TrainingTypeConverter
 
-@Database(entities = [Goal::class, Sport::class, Training::class], version = 1)
+@Database(entities = [Goal::class, Sport::class, Training::class, TrainingType::class], version = 1)
 @TypeConverters(
     DateConverter::class,
-    DistanceUnitConverter::class,
-    TrainingTypeConverter::class,
+    DistanceUnitConverter::class
 )
 abstract class AppDatabase: RoomDatabase() {
     abstract fun goalDao(): GoalDao
@@ -27,6 +27,8 @@ abstract class AppDatabase: RoomDatabase() {
     abstract fun sportDao(): SportDao
 
     abstract fun trainingDao(): TrainingDao
+
+    abstract fun trainingTypeDao(): TrainingTypeDao
 
     companion object {
         private var db: AppDatabase? = null

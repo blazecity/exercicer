@@ -1,7 +1,10 @@
 package ch.mobpro.exercicer.data.entity
 
-enum class TrainingType {
-    COORDINATION,
-    ENDURANCE,
-    STRENGTH
-}
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "training_type")
+data class TrainingType(
+    @PrimaryKey(autoGenerate = true) val id: Long? = null,
+    var name: String
+)

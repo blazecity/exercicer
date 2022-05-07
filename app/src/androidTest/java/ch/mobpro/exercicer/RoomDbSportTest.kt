@@ -2,6 +2,7 @@ package ch.mobpro.exercicer
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import ch.mobpro.exercicer.data.dao.SportDao
+import ch.mobpro.exercicer.data.dao.TrainingTypeDao
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import kotlinx.coroutines.flow.first
@@ -14,18 +15,22 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SportEntityDbTest: TestDatabase() {
     private lateinit var sportDao: SportDao
+    private lateinit var trainingTypeDao: TrainingTypeDao
 
     @Before
     override fun createDb() {
         super.createDb()
         this.sportDao = super.db.sportDao()
+        this.trainingTypeDao = super.db.trainingTypeDao()
     }
 
     @Test
     fun testInsert() {
         runTest {
             // Arrange
-            val sport = Sport(name = "Jogging", trainingType = TrainingType.ENDURANCE)
+            val trainingType = createTestTrainingType()
+            val trainingTypeId = trainingTypeDao.insert(trainingType)
+            val sport = Sport(name = "Jogging", trainingTypeId = trainingTypeId)
 
             // Act
             sportDao.insert(sport)
@@ -39,7 +44,9 @@ class SportEntityDbTest: TestDatabase() {
     @Test
     fun testUpdateName() = runTest {
         // Arrange
-        val sport = Sport(name = "Gym", trainingType = TrainingType.STRENGTH)
+        val trainingType = createTestTrainingType("Strength")
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sport = Sport(name = "Gym", trainingTypeId = trainingTypeId)
         sportDao.insert(sport)
         val sportFromDb = sportDao.getAll().first().first()
 
@@ -56,12 +63,16 @@ class SportEntityDbTest: TestDatabase() {
     @Test
     fun testUpdateTrainingType() = runTest {
         // Arrange
-        val sport = Sport(name = "Fussball", trainingType = TrainingType.STRENGTH)
+        val trainingTypeStrength = createTestTrainingType("Strength")
+        val trainingTypeStrengthId = trainingTypeDao.insert(trainingTypeStrength)
+        val sport = Sport(name = "Fussball", trainingTypeId = trainingTypeStrengthId)
         sportDao.insert(sport)
         val sportFromDb = sportDao.getAll().first().first()
 
         // Act
-        sportFromDb.trainingType = TrainingType.ENDURANCE
+        val trainingTypeEndurance = createTestTrainingType("Endurance")
+        val trainingTypeEnduranceId = trainingTypeDao.insert(trainingTypeEndurance)
+        sportFromDb.trainingTypeId = trainingTypeEnduranceId
         sportDao.update(sportFromDb)
         val sportListAfterUpdate = sportDao.getAll().first()
 
@@ -73,7 +84,9 @@ class SportEntityDbTest: TestDatabase() {
     @Test
     fun testDelete() = runTest {
         // Arrange
-        val sport = Sport(name = "Schwimmen", trainingType = TrainingType.ENDURANCE)
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sport = Sport(name = "Schwimmen", trainingTypeId = trainingTypeId)
         sportDao.insert(sport)
         val sportFromDb = sportDao.getAll().first().first()
 

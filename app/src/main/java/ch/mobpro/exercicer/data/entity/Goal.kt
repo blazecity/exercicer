@@ -10,14 +10,14 @@ import java.util.Date
     foreignKeys = [
         ForeignKey(
             entity = Sport::class,
-            parentColumns = ["sportId"],
-            childColumns = ["sportIdFkGoal"]
+            parentColumns = ["id"],
+            childColumns = ["sportId"]
         )
     ]
 )
 data class Goal(
     @PrimaryKey(autoGenerate = true) val goalId: Long? = null,
-    var sportIdFkGoal: Long,
+    var sportId: Long,
     var start: LocalDate,
     var end: LocalDate,
     var trainingTimeGoalHours: Int? = null,
