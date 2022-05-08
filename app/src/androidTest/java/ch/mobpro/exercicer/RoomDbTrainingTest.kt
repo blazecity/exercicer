@@ -4,7 +4,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import ch.mobpro.exercicer.data.dao.SportDao
 import ch.mobpro.exercicer.data.dao.TrainingDao
 import ch.mobpro.exercicer.data.dao.TrainingTypeDao
+import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.Training
+import ch.mobpro.exercicer.data.entity.TrainingType
+import ch.mobpro.exercicer.data.entity.mapping.getCalendarWeek
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -12,6 +15,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.LocalDate
+import java.time.temporal.WeekFields
+import java.util.*
 
 
 @RunWith(AndroidJUnit4::class)
@@ -142,5 +147,64 @@ class RoomDbTrainingTest: TestDatabase() {
 
         // Assert
         assertEquals(0, trainingMapAfterDeletion.size)
+    }
+
+    @Test
+    fun testGetAllByDate() = runTest {
+        // Arrange
+        val trainingType = createTestTrainingType()
+        val trainingTypeId = trainingTypeDao.insert(trainingType)
+        val sportGym = createTestSport(trainingTypeId = trainingTypeId)
+        val sportTennis = createTestSport("Tennis", trainingTypeId = trainingTypeId)
+        val sportGymId = sportDao.insert(sportGym)
+        val sportTennisId = sportDao.insert(sportTennis)
+        val trainingList = listOf(
+            Training(date = LocalDate.of(2022, 1, 1),
+                sportId = sportGymId,
+                trainingDistanceInMeters = 10),
+            Training(date = LocalDate.of(2022, 1, 2),
+                sportId = sportTennisId,
+                trainingDistanceInMeters = 20),
+            Training(date = LocalDate.of(2022, 1, 3),
+                sportId = sportGymId,
+                trainingDistanceInMeters = 15),
+            Training(date = LocalDate.of(2022, 1, 4),
+                sportId = sportTennisId,
+                trainingDistanceInMeters = 40)
+        )
+        trainingList.forEach {
+            trainingDao.insert(it)
+        }
+
+        // Act
+        val filteredTrainings = trainingDao.getAllByDate(
+            LocalDate.of(2022, 1, 2),
+            LocalDate.of(2022, 1, 4)
+        ).first()
+
+        // SAMPLE CODE FOR AGGREGATION
+        val mappingsPerTrainingType = filteredTrainings.groupBy { it.trainingType }.toMutableMap()
+        val resultMap = mutableMapOf<TrainingType, Map<Sport, Int>>()
+        for (trainingTypeKey in mappingsPerTrainingType.keys) {
+            val mapValue = mappingsPerTrainingType[trainingTypeKey]!!
+            val groupedValue = mapValue.groupBy { it.sport }
+            for (sportKey in groupedValue.keys) {
+                val trainingList = groupedValue[sportKey]!!
+                val aggregate: Int = trainingList.fold(0) {left, right ->
+                    left + right.training.trainingDistanceInMeters!!
+                }
+                val aggMap = resultMap.getOrPut(trainingTypeKey) { mutableMapOf() }.toMutableMap()
+                aggMap[sportKey] = aggregate
+            }
+        }
+
+        // Assert
+        assertEquals(3, filteredTrainings.size)
+    }
+
+    @Test
+    fun testGetWeekDay() {
+        val today = LocalDate.now()
+        assertEquals(18, today.getCalendarWeek())
     }
 }

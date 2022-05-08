@@ -1,5 +1,6 @@
 package ch.mobpro.exercicer.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -9,15 +10,17 @@ import java.time.LocalDate
     foreignKeys = [
         ForeignKey(
             entity = Sport::class,
-            parentColumns = ["id"],
-            childColumns = ["sportId"]
+            parentColumns = ["sport_id"],
+            childColumns = ["sport_fk"]
         )
     ]
 )
 data class Training(
-    @PrimaryKey(autoGenerate = true) val trainingId: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "training_id")
+    val id: Long? = null,
     var date: LocalDate,
-    var sportId: Long,
+    @ColumnInfo(name = "sport_fk") var sportId: Long,
     var trainingTimeHour: Int? = null,
     var trainingTimeMinutes: Int? = null,
     var trainingTimeSeconds: Int? = null,

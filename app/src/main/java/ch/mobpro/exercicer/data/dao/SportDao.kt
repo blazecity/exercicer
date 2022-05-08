@@ -2,6 +2,7 @@ package ch.mobpro.exercicer.data.dao
 
 import androidx.room.*
 import ch.mobpro.exercicer.data.entity.Sport
+import ch.mobpro.exercicer.data.entity.TrainingType
 import kotlinx.coroutines.flow.Flow
 
 @Dao

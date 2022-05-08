@@ -4,7 +4,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import ch.mobpro.exercicer.data.dao.SportDao
 import ch.mobpro.exercicer.data.dao.TrainingTypeDao
 import ch.mobpro.exercicer.data.entity.Sport
-import ch.mobpro.exercicer.data.entity.TrainingType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

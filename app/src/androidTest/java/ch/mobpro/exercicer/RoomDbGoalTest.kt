@@ -3,13 +3,11 @@ package ch.mobpro.exercicer
 import ch.mobpro.exercicer.data.dao.GoalDao
 import ch.mobpro.exercicer.data.dao.SportDao
 import ch.mobpro.exercicer.data.dao.TrainingTypeDao
-import ch.mobpro.exercicer.data.entity.TrainingType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.util.*
 
 class RoomDbGoalTest: TestDatabase() {
     private lateinit var goalDao: GoalDao

@@ -20,7 +20,7 @@ interface GoalDao {
     @Query(
         "SELECT * " +
                 "FROM goal " +
-                "JOIN sport ON goal.sportId = sport.id"
+                "JOIN sport ON goal.sport_goal_fk = sport.sport_id"
     )
     fun getAll(): Flow<Map<Goal, Sport>>
 }
