@@ -7,7 +7,7 @@ import ch.mobpro.exercicer.data.dao.TrainingTypeDao
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.Training
 import ch.mobpro.exercicer.data.entity.TrainingType
-import ch.mobpro.exercicer.data.entity.mapping.getCalendarWeek
+import ch.mobpro.exercicer.data.entity.mapping.getCalendarWeekString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.LocalDate
-import java.time.temporal.WeekFields
 import java.util.*
 
 
@@ -205,6 +204,6 @@ class RoomDbTrainingTest: TestDatabase() {
     @Test
     fun testGetWeekDay() {
         val today = LocalDate.now()
-        assertEquals(18, today.getCalendarWeek())
+        assertEquals(18, today.getCalendarWeekString())
     }
 }

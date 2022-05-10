@@ -6,8 +6,16 @@ import ch.mobpro.exercicer.data.entity.TrainingType
 import java.time.LocalDate
 import java.time.temporal.WeekFields
 
-fun LocalDate.getCalendarWeek(): Int {
-    return this.get(WeekFields.ISO.weekOfYear())
+fun LocalDate.getCalendarWeekString(): String {
+    val calenderWeek = this.get(WeekFields.ISO.weekOfYear())
+    val year = this.year
+    return "$calenderWeek/$year"
+}
+
+fun LocalDate.getMonthString(): String {
+    val month = this.month
+    val year = this.year
+    return "$month/$year"
 }
 
 inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy(
@@ -20,10 +28,10 @@ inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy
             TrainingType::class -> it.trainingType
             Sport::class -> it.sport
             LocalDate::class -> it.training.date
-            Int::class -> when (dateAggregationLevel) {
-                DateAggregationLevel.DAILY -> it.training.date
-                DateAggregationLevel.WEEKLY -> it.training.date.getCalendarWeek()
-                DateAggregationLevel.MONTHLY -> it.training.date.monthValue
+            String::class -> when (dateAggregationLevel) {
+                DateAggregationLevel.DAILY -> it.training.date.toString()
+                DateAggregationLevel.WEEKLY -> it.training.date.getCalendarWeekString()
+                DateAggregationLevel.MONTHLY -> it.training.date.getMonthString()
             }
             else -> {}
         }
@@ -35,10 +43,10 @@ inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy
             TrainingType::class -> firstLevelValue.groupBy { it.trainingType }
             Sport::class -> firstLevelValue.groupBy { it.sport }
             LocalDate::class -> firstLevelValue.groupBy { it.training.date }
-            Int::class -> when (dateAggregationLevel) {
-                DateAggregationLevel.DAILY -> firstLevelValue.groupBy { it.training.date }
-                DateAggregationLevel.WEEKLY -> firstLevelValue.groupBy { it.training.date.getCalendarWeek() }
-                DateAggregationLevel.MONTHLY -> firstLevelValue.groupBy { it.training.date.monthValue }
+            String::class -> when (dateAggregationLevel) {
+                DateAggregationLevel.DAILY -> firstLevelValue.groupBy { it.training.date.toString() }
+                DateAggregationLevel.WEEKLY -> firstLevelValue.groupBy { it.training.date.getCalendarWeekString() }
+                DateAggregationLevel.MONTHLY -> firstLevelValue.groupBy { it.training.date.getMonthString() }
             }
             else -> {}
         } as MutableMap<V, List<TrainingSportTrainingTypeMapping>>
