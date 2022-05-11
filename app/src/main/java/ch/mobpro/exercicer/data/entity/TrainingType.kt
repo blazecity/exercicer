@@ -10,4 +10,8 @@ data class TrainingType(
     @ColumnInfo(name = "training_type_id")
     val id: Long? = null,
     @ColumnInfo(name = "training_type_name") var name: String
-)
+) {
+    override fun toString(): String {
+        return this.name
+    }
+}

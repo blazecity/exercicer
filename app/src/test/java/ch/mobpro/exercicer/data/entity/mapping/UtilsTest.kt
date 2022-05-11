@@ -3,6 +3,7 @@ package ch.mobpro.exercicer.data.entity.mapping
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.Training
 import ch.mobpro.exercicer.data.entity.TrainingType
+import ch.mobpro.exercicer.data.util.groupBy
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

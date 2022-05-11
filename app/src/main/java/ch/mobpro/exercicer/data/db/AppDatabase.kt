@@ -16,7 +16,11 @@ import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.util.DateConverter
 import ch.mobpro.exercicer.data.util.DistanceUnitConverter
 
-@Database(entities = [Goal::class, Sport::class, Training::class, TrainingType::class], version = 1)
+@Database(
+    entities = [Goal::class, Sport::class, Training::class, TrainingType::class],
+    version = 1,
+    exportSchema = false
+)
 @TypeConverters(
     DateConverter::class,
     DistanceUnitConverter::class

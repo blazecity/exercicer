@@ -52,12 +52,11 @@ class RoomDbGoalTest: TestDatabase() {
         // Act
         goalDao.insert(goal1)
         goalDao.insert(goal2)
-        val goalMapAfterInsertion = goalDao.getAll().first()
+        val goalListAfterInsertion = goalDao.getAll().first()
 
         // Assert
-        val goals = goalMapAfterInsertion.keys
-        val sports = goalMapAfterInsertion.values.toSet()
-        Assert.assertEquals(2, goals.size)
+        val sports = goalListAfterInsertion.map { it.sport }.toSet()
+        Assert.assertEquals(2, goalListAfterInsertion.size)
         Assert.assertEquals(1, sports.size)
     }
 
@@ -70,16 +69,16 @@ class RoomDbGoalTest: TestDatabase() {
         val sportId = sportDao.insert(sport)
         val goal = createTestGoal(sportId)
         goalDao.insert(goal)
-        var goalFromDb = goalDao.getAll().first().keys.first()
+        var goalFromDb = goalDao.getAll().first().first().goal
 
         // Act
         goalFromDb.distanceGoalInMetres = 1000
         goalDao.update(goalFromDb)
-        val goalMapAfterUpdate = goalDao.getAll().first()
-        val goalAfterUpdate = goalMapAfterUpdate.keys.first()
+        val goalListAfterUpdate = goalDao.getAll().first()
+        val goalAfterUpdate = goalListAfterUpdate.first().goal
 
         // Assert
-        Assert.assertEquals(1, goalMapAfterUpdate.size)
+        Assert.assertEquals(1, goalListAfterUpdate.size)
         Assert.assertEquals(goalFromDb, goalAfterUpdate)
     }
 
@@ -94,16 +93,16 @@ class RoomDbGoalTest: TestDatabase() {
         val sportTennisId = sportDao.insert(sportTennis)
         val goal = createTestGoal(sportGymId)
         goalDao.insert(goal)
-        val goalFromDb = goalDao.getAll().first().keys.first()
+        val goalFromDb = goalDao.getAll().first().first().goal
 
         // Act
         goalFromDb.sportId = sportTennisId
         goalDao.update(goalFromDb)
-        val goalMapAfterUpdate = goalDao.getAll().first()
-        val goalAfterUpdate = goalMapAfterUpdate.keys.first()
+        val goalListAfterUpdate = goalDao.getAll().first()
+        val goalAfterUpdate = goalListAfterUpdate.first().goal
 
         // Assert
-        Assert.assertEquals(1, goalMapAfterUpdate.size)
+        Assert.assertEquals(1, goalListAfterUpdate.size)
         Assert.assertEquals(goalFromDb, goalAfterUpdate)
     }
 
@@ -116,13 +115,13 @@ class RoomDbGoalTest: TestDatabase() {
         val sportId = sportDao.insert(sport)
         val goal = createTestGoal(sportId)
         goalDao.insert(goal)
-        val goalFromDb = goalDao.getAll().first().keys.first()
+        val goalFromDb = goalDao.getAll().first().first().goal
 
         // Act
         goalDao.delete(goalFromDb)
-        val goalMapAfterDeletion = goalDao.getAll().first()
+        val goalListAfterDeletion = goalDao.getAll().first()
 
         // Assert
-        Assert.assertEquals(0, goalMapAfterDeletion.size)
+        Assert.assertEquals(0, goalListAfterDeletion.size)
     }
 }

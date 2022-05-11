@@ -1,13 +1,13 @@
 package ch.mobpro.exercicer.data.entity
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.room.*
 import java.time.LocalDate
 import java.util.Date
 
 @Entity(
+    indices = [
+        Index(value = ["sport_goal_fk"])
+    ],
     foreignKeys = [
         ForeignKey(
             entity = Sport::class,

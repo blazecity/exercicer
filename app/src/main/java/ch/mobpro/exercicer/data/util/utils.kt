@@ -1,10 +1,37 @@
-package ch.mobpro.exercicer.data.entity.mapping
+package ch.mobpro.exercicer.data.util
 
 
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
+import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
+import ch.mobpro.exercicer.data.entity.mapping.SummingWrapper
+import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
+
+
+fun Double.round(decimals: Int): Double {
+    var multiplier = 1.0
+    repeat(decimals) { multiplier *= 10 }
+    return kotlin.math.round(this * multiplier) / multiplier
+}
+
+fun getFormattedDistance(distanceInMetres: Int): String {
+    val distanceInKm = distanceInMetres / 1000.0
+    distanceInKm.round(2)
+    return "$distanceInKm km"
+}
+
+fun getFormattedTime(timeInSeconds: Int): String {
+    val seconds = timeInSeconds % 60
+    val paddedSeconds = if (seconds / 10 == 0) "0$seconds" else "$seconds"
+    val minutes = (timeInSeconds / 60) % 60
+    val paddedMinutes = if (minutes / 10 == 0) "0$minutes:" else "$minutes:"
+    val hours = (timeInSeconds / 3600)
+    val paddedHours = if (hours / 10 == 0) "0$hours:" else "$hours"
+    return "$paddedHours$paddedMinutes$paddedSeconds"
+}
 
 fun LocalDate.getCalendarWeekString(): String {
     val calenderWeek = this.get(WeekFields.ISO.weekOfYear())
@@ -17,6 +44,8 @@ fun LocalDate.getMonthString(): String {
     val year = this.year
     return "$month/$year"
 }
+
+fun LocalDate.getFormattedString(): String = this.format(DateTimeFormatter.ofPattern("dd.MM.YYYY"))
 
 inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy(
     dateAggregationLevel: DateAggregationLevel = DateAggregationLevel.DAILY
