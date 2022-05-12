@@ -1,17 +1,21 @@
-package ch.mobpro.exercicer.components.views
+package ch.mobpro.exercicer.components.views.reporting
 
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.Chip
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -24,6 +28,7 @@ import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.BaseCard
 import ch.mobpro.exercicer.components.cards.AggregationLevel
 import ch.mobpro.exercicer.components.date.DatePickerField
+import ch.mobpro.exercicer.components.views.ScreenTitle
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
@@ -37,34 +42,74 @@ import java.time.LocalDate
 
 @Composable
 fun ReportingPage(reportingViewModel: TrainingViewModel) {
-    Column {
+    Column(modifier = Modifier.padding(10.dp)) {
         var dataMap by remember {
             mutableStateOf<Map<out Any, Map<out Any, SummingWrapper>>>(mutableMapOf())
         }
 
-        ReportingFilter { first, second, date ->
-            val list = reportingViewModel.trainingList.value
+        var filterOpen by remember {
+            mutableStateOf(false)
+        }
+        
+        ScreenTitle(title = "Reporting")
 
-            dataMap = when (first) {
-                AggregationLevel.TRAINING_TYPE -> when (second) {
-                    AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>()
-                    AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date)
-                    else -> mutableMapOf()
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(CornerSize(10.dp)),
+            elevation = 10.dp
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = remember {
+                                MutableInteractionSource()
+                            },
+                            indication = null
+                        ) {
+                              filterOpen = !filterOpen
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (filterOpen) Icons.Default.KeyboardArrowDown
+                            else Icons.Default.KeyboardArrowRight,
+                        contentDescription = "down arrow"
+                    )
+
+                    Text("Filter")
                 }
 
-                AggregationLevel.SPORT -> when (second) {
-                    AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>()
-                    AggregationLevel.DATE -> list.groupBy<Sport, String>(date)
-                    else -> mutableMapOf()
-                }
+                if (filterOpen) {
+                    ReportingFilter { first, second, date ->
+                        val list = reportingViewModel.trainingList.value
 
-                AggregationLevel.DATE -> when (second) {
-                    AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date)
-                    AggregationLevel.SPORT -> list.groupBy<String, Sport>(date)
-                    else -> mutableMapOf()
+                        dataMap = when (first) {
+                            AggregationLevel.TRAINING_TYPE -> when (second) {
+                                AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>()
+                                AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date)
+                                else -> mutableMapOf()
+                            }
+
+                            AggregationLevel.SPORT -> when (second) {
+                                AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>()
+                                AggregationLevel.DATE -> list.groupBy<Sport, String>(date)
+                                else -> mutableMapOf()
+                            }
+
+                            AggregationLevel.DATE -> when (second) {
+                                AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date)
+                                AggregationLevel.SPORT -> list.groupBy<String, Sport>(date)
+                                else -> mutableMapOf()
+                            }
+                        }
+                    }
                 }
             }
         }
+
         ReportingList(dataMap = dataMap)
     }
 }
@@ -78,7 +123,9 @@ fun ReportingRow(bold: Boolean, vararg rowValues: String) {
         var rightAligned = false
         rowValues.forEach {
             Text(it,
-                modifier = Modifier.fillMaxWidth().weight(weight),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(weight),
                 fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
                 textAlign = if (rightAligned) TextAlign.Right else TextAlign.Left
             )
@@ -148,16 +195,16 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
         mutableStateOf(DateAggregationLevel.DAILY)
     }
 
-    Column {
+    Column(modifier = Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
         // time filter
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(5.dp), horizontalArrangement = Arrangement.SpaceAround) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)) {
                 DatePickerField("Von") { date -> fromDate = date }
             }
+            
+            Spacer(modifier = Modifier.padding(horizontal = 20.dp))
 
             Column(modifier = Modifier
                 .fillMaxWidth()
@@ -180,9 +227,19 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
 
             NumberChip(text = "Trainingsart",
                 numberDetermination = {
-                    checkAggregationLevels(firstAggregationLevel, secondAggregationLevel, AggregationLevel.TRAINING_TYPE)
+                    checkAggregationLevels(
+                        firstAggregationLevel,
+                        secondAggregationLevel,
+                        AggregationLevel.TRAINING_TYPE
+                    )
                 },
-                disableCheck = { checkEnableAggregationLevelChip(firstAggregationLevel, secondAggregationLevel, AggregationLevel.TRAINING_TYPE) }
+                disableCheck = {
+                    checkEnableAggregationLevelChip(
+                        firstAggregationLevel,
+                        secondAggregationLevel,
+                        AggregationLevel.TRAINING_TYPE
+                    )
+                }
             ) {
                 if (firstAggregationLevel == AggregationLevel.TRAINING_TYPE) {
                     firstAggregationLevel = secondAggregationLevel
@@ -206,9 +263,19 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
 
             NumberChip(text = "Sportart",
                 numberDetermination = {
-                    checkAggregationLevels(firstAggregationLevel, secondAggregationLevel, AggregationLevel.SPORT)
+                    checkAggregationLevels(
+                        firstAggregationLevel,
+                        secondAggregationLevel,
+                        AggregationLevel.SPORT
+                    )
                 },
-                disableCheck = { checkEnableAggregationLevelChip(firstAggregationLevel, secondAggregationLevel, AggregationLevel.SPORT) }
+                disableCheck = {
+                    checkEnableAggregationLevelChip(
+                        firstAggregationLevel,
+                        secondAggregationLevel,
+                        AggregationLevel.SPORT
+                    )
+                }
             ) {
                 if (firstAggregationLevel == AggregationLevel.SPORT) {
                     firstAggregationLevel = secondAggregationLevel
@@ -273,7 +340,10 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
              */
 
             ChipGroup("Datumsebene") {
-                DateLevelChip(text = "täglich", isChecked = { dateAggregationLevel == DateAggregationLevel.DAILY }) {
+                DateLevelChip(
+                    text = "täglich",
+                    isChecked = { dateAggregationLevel == DateAggregationLevel.DAILY }
+                ) {
                     dateAggregationLevel = DateAggregationLevel.DAILY
                     if (secondAggregationLevel != null) {
                         onFilterChange.invoke(firstAggregationLevel!!,
@@ -281,7 +351,10 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
                     }
                 }
                 
-                DateLevelChip(text = "wöchentlich", isChecked = { dateAggregationLevel == DateAggregationLevel.WEEKLY }) {
+                DateLevelChip(
+                    text = "wöchentlich",
+                    isChecked = { dateAggregationLevel == DateAggregationLevel.WEEKLY }
+                ) {
                     dateAggregationLevel = DateAggregationLevel.WEEKLY
                     if (secondAggregationLevel != null) {
                         onFilterChange.invoke(firstAggregationLevel!!,
@@ -289,7 +362,10 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
                     }
                 }
                 
-                DateLevelChip(text = "monatlich", isChecked = { dateAggregationLevel == DateAggregationLevel.MONTHLY }) {
+                DateLevelChip(
+                    text = "monatlich",
+                    isChecked = { dateAggregationLevel == DateAggregationLevel.MONTHLY }
+                ) {
                     dateAggregationLevel = DateAggregationLevel.MONTHLY
                     if (secondAggregationLevel != null) {
                         onFilterChange.invoke(firstAggregationLevel!!,
@@ -301,11 +377,19 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
     }
 }
 
-private fun checkAggregationLevels(first: AggregationLevel?, second: AggregationLevel?, toBeChecked: AggregationLevel): Int {
+private fun checkAggregationLevels(
+    first: AggregationLevel?,
+    second: AggregationLevel?,
+    toBeChecked: AggregationLevel
+): Int {
     return if (first == toBeChecked) 1 else if (second == toBeChecked) 2 else 0
 }
 
-private fun checkEnableAggregationLevelChip(first: AggregationLevel?, second: AggregationLevel?, toBeChecked: AggregationLevel): Boolean {
+private fun checkEnableAggregationLevelChip(
+    first: AggregationLevel?,
+    second: AggregationLevel?,
+    toBeChecked: AggregationLevel
+): Boolean {
     if (first == null || second == null) return true
     val checkResult = checkAggregationLevels(first, second, toBeChecked)
     return checkResult == 1 || checkResult == 2
@@ -318,7 +402,9 @@ fun NumberChip(text: String, numberDetermination: () -> Int, disableCheck: () ->
         modifier = Modifier
             .padding(end = 12.dp),
         enabled = disableCheck(),
-        leadingIcon = { if (numberDetermination() == 1) ChipIcon() else if (numberDetermination() == 2) ChipIcon(false) }
+        leadingIcon = {
+            if (numberDetermination() == 1) ChipIcon()
+            else if (numberDetermination() == 2) ChipIcon(false) }
     ) {
         Text(text)
     }
@@ -346,8 +432,14 @@ private fun ChipIcon(first: Boolean = true) {
 
 @Composable
 fun ChipGroup(label: String, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.padding(5.dp)) {
-        Text(label, modifier = Modifier.padding(horizontal = 10.dp), color = Color.Gray, fontSize = 11.sp)
+    Column(modifier = Modifier.padding(top = 10.dp)) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 10.dp),
+            color = Color.Gray,
+            fontSize = 11.sp
+        )
+
         Row(modifier = Modifier.horizontalScroll(rememberScrollState())
         ) {
             content()
