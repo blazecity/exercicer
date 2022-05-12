@@ -27,7 +27,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        persistData()
         setContent {
             ExercicerTheme {
                 // A surface container using the 'background' color from the theme
@@ -35,12 +34,13 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    ReportingPage(trainingViewModel)
+                    // ReportingPage(trainingViewModel)
                 }
             }
         }
     }
 
+    // for testing
     private fun persistData() {
         val trainingType1 = TrainingType(1, "Training Type 1")
         val trainingType2 = TrainingType(2, "Training Type 2")
