@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +34,7 @@ import ch.mobpro.exercicer.data.util.getFormattedTime
 import ch.mobpro.exercicer.data.util.groupBy
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 import java.time.LocalDate
+import java.util.Comparator
 
 @Composable
 fun ReportingPage(reportingViewModel: TrainingViewModel) {
@@ -46,20 +48,24 @@ fun ReportingPage(reportingViewModel: TrainingViewModel) {
 
             dataMap = when (first) {
                 AggregationLevel.TRAINING_TYPE -> when (second) {
-                    AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>()
-                    AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date)
+                    AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>().toSortedMap(
+                        compareBy { it.name })
+                    AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date).toSortedMap(
+                        compareBy { it.name })
                     else -> mutableMapOf()
                 }
 
                 AggregationLevel.SPORT -> when (second) {
-                    AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>()
-                    AggregationLevel.DATE -> list.groupBy<Sport, String>(date)
+                    AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>().toSortedMap(
+                        compareBy { it.name })
+                    AggregationLevel.DATE -> list.groupBy<Sport, String>(date).toSortedMap(
+                        compareBy { it.name })
                     else -> mutableMapOf()
                 }
 
                 AggregationLevel.DATE -> when (second) {
-                    AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date)
-                    AggregationLevel.SPORT -> list.groupBy<String, Sport>(date)
+                    AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date).toSortedMap()
+                    AggregationLevel.SPORT -> list.groupBy<String, Sport>(date).toSortedMap()
                     else -> mutableMapOf()
                 }
             }
@@ -74,14 +80,19 @@ fun ReportingRow(bold: Boolean, vararg rowValues: String) {
     Row(modifier = Modifier.fillMaxWidth()) {
         // first row has weight of 1
         var weight = 1f
+        var rightAligned = false
         rowValues.forEach {
             Text(it,
                 modifier = Modifier.fillMaxWidth().weight(weight),
-                fontWeight = if (bold) FontWeight.Bold else FontWeight.Light
+                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                textAlign = if (rightAligned) TextAlign.Right else TextAlign.Left
             )
 
-            // following rows after first row have half weight
+            // following cols after first row have half weight
             weight = 0.5f
+
+            // following cols after first are right aligned
+            rightAligned = true
         }
     }
 }

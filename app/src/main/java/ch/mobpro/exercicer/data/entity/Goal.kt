@@ -2,7 +2,6 @@ package ch.mobpro.exercicer.data.entity
 
 import androidx.room.*
 import java.time.LocalDate
-import java.util.Date
 
 @Entity(
     indices = [
