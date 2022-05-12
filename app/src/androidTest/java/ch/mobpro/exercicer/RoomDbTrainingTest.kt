@@ -7,7 +7,7 @@ import ch.mobpro.exercicer.data.dao.TrainingTypeDao
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.Training
 import ch.mobpro.exercicer.data.entity.TrainingType
-import ch.mobpro.exercicer.data.entity.mapping.getCalendarWeek
+import ch.mobpro.exercicer.data.util.getCalendarWeekString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -15,8 +15,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.LocalDate
-import java.time.temporal.WeekFields
-import java.util.*
 
 
 @RunWith(AndroidJUnit4::class)
@@ -68,12 +66,11 @@ class RoomDbTrainingTest: TestDatabase() {
         // Act
         trainingDao.insert(training1)
         trainingDao.insert(training2)
-        val trainingMapAfterInsertion = trainingDao.getAll().first()
+        val trainingListAfterInsertion = trainingDao.getAll().first()
+        val sports = trainingListAfterInsertion.map { it.sport }.toSet()
 
         // Assert
-        val trainings = trainingMapAfterInsertion.keys
-        val sports = trainingMapAfterInsertion.values.toSet()
-        assertEquals(2, trainings.size)
+        assertEquals(2, trainingListAfterInsertion.size)
         assertEquals(1, sports.size)
     }
 
@@ -89,16 +86,16 @@ class RoomDbTrainingTest: TestDatabase() {
                                 remarks = "Before update")
 
         trainingDao.insert(training)
-        var trainingFromDb = trainingDao.getAll().first().keys.first()
+        var trainingFromDb = trainingDao.getAll().first().first().training
 
         // Act
         trainingFromDb.remarks = "After update"
         trainingDao.update(trainingFromDb)
-        val trainingMapAfterUpdate = trainingDao.getAll().first()
-        val trainingAfterUpdate = trainingMapAfterUpdate.keys.first()
+        val trainingListAfterUpdate = trainingDao.getAll().first()
+        val trainingAfterUpdate = trainingListAfterUpdate.first().training
 
         // Assert
-        assertEquals(1, trainingMapAfterUpdate.size)
+        assertEquals(1, trainingListAfterUpdate.size)
         assertEquals(trainingFromDb, trainingAfterUpdate)
     }
 
@@ -116,17 +113,17 @@ class RoomDbTrainingTest: TestDatabase() {
                                 remarks = "Gym exercises")
 
         trainingDao.insert(training)
-        val trainingFromDb = trainingDao.getAll().first().keys.first()
+        val trainingFromDb = trainingDao.getAll().first().first().training
 
         // Act
         trainingFromDb.sportId = sportTennisId
         trainingFromDb.remarks = "Tennis"
         trainingDao.update(trainingFromDb)
-        val trainingMapAfterUpdate = trainingDao.getAll().first()
-        val trainingAfterUpdate = trainingMapAfterUpdate.keys.first()
+        val trainingListAfterUpdate = trainingDao.getAll().first()
+        val trainingAfterUpdate = trainingListAfterUpdate.first().training
 
         // Assert
-        assertEquals(1, trainingMapAfterUpdate.size)
+        assertEquals(1, trainingListAfterUpdate.size)
         assertEquals(trainingFromDb, trainingAfterUpdate)
     }
 
@@ -139,7 +136,7 @@ class RoomDbTrainingTest: TestDatabase() {
         val sportId = sportDao.insert(sport)
         val training = Training(date = LocalDate.now(), sportId = sportId)
         trainingDao.insert(training)
-        val trainingFromDb = trainingDao.getAll().first().keys.first()
+        val trainingFromDb = trainingDao.getAll().first().first().training
 
         // Act
         trainingDao.delete(trainingFromDb)
@@ -204,7 +201,7 @@ class RoomDbTrainingTest: TestDatabase() {
 
     @Test
     fun testGetWeekDay() {
-        val today = LocalDate.now()
-        assertEquals(18, today.getCalendarWeek())
+        val date = LocalDate.of(2022, 5, 11)
+        assertEquals("19/2022", date.getCalendarWeekString())
     }
 }
