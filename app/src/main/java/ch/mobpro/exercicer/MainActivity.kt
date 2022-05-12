@@ -4,11 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import ch.mobpro.exercicer.components.views.ReportingPage
+import androidx.compose.ui.unit.dp
+import ch.mobpro.exercicer.components.views.NavigationController
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.Training
 import ch.mobpro.exercicer.data.entity.TrainingType
@@ -27,20 +30,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // persistData()
         setContent {
             ExercicerTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-                    // ReportingPage(trainingViewModel)
-                }
+                NavigationController()
             }
         }
     }
 
-    // for testing
+    // sample data
     private fun persistData() {
         val trainingType1 = TrainingType(1, "Training Type 1")
         val trainingType2 = TrainingType(2, "Training Type 2")

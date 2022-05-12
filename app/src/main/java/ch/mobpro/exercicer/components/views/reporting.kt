@@ -34,7 +34,6 @@ import ch.mobpro.exercicer.data.util.getFormattedTime
 import ch.mobpro.exercicer.data.util.groupBy
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 import java.time.LocalDate
-import java.util.Comparator
 
 @Composable
 fun ReportingPage(reportingViewModel: TrainingViewModel) {
@@ -339,9 +338,9 @@ fun DateLevelChip(text: String, isChecked: () -> Boolean, onClick: () -> Unit) {
 @Composable
 private fun ChipIcon(first: Boolean = true) {
     return if (first ) {
-        Icon(painterResource(id = R.drawable.ic_baseline_looks_one_24), contentDescription = "first")
+        Icon(painterResource(id = R.drawable.looks_one), contentDescription = "first")
     } else {
-        Icon(painterResource(id = R.drawable.ic_baseline_looks_two_24), contentDescription = "second")
+        Icon(painterResource(id = R.drawable.looks_two), contentDescription = "second")
     }
 }
 

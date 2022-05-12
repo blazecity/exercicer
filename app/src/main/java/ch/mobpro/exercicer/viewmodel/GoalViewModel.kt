@@ -4,7 +4,6 @@ package ch.mobpro.exercicer.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ch.mobpro.exercicer.data.entity.Goal
-import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.GoalSportTrainingTypeMapping
 import ch.mobpro.exercicer.data.repository.GoalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
