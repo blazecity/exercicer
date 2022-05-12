@@ -48,24 +48,20 @@ fun ReportingPage(reportingViewModel: TrainingViewModel) {
 
             dataMap = when (first) {
                 AggregationLevel.TRAINING_TYPE -> when (second) {
-                    AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>().toSortedMap(
-                        compareBy { it.name })
-                    AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date).toSortedMap(
-                        compareBy { it.name })
+                    AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>()
+                    AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date)
                     else -> mutableMapOf()
                 }
 
                 AggregationLevel.SPORT -> when (second) {
-                    AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>().toSortedMap(
-                        compareBy { it.name })
-                    AggregationLevel.DATE -> list.groupBy<Sport, String>(date).toSortedMap(
-                        compareBy { it.name })
+                    AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>()
+                    AggregationLevel.DATE -> list.groupBy<Sport, String>(date)
                     else -> mutableMapOf()
                 }
 
                 AggregationLevel.DATE -> when (second) {
-                    AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date).toSortedMap()
-                    AggregationLevel.SPORT -> list.groupBy<String, Sport>(date).toSortedMap()
+                    AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date)
+                    AggregationLevel.SPORT -> list.groupBy<String, Sport>(date)
                     else -> mutableMapOf()
                 }
             }

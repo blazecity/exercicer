@@ -45,14 +45,14 @@ fun LocalDate.getMonthString(): String {
     return "$month/$year"
 }
 
-fun LocalDate.getFormattedString(): String = this.format(DateTimeFormatter.ofPattern("dd.MM.YYYY"))
+fun LocalDate.getFormattedString(): String = this.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 
-inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy(
+inline fun <reified K: Comparable<K>, reified V: Comparable<V>> List<TrainingSportTrainingTypeMapping>.groupBy(
     dateAggregationLevel: DateAggregationLevel = DateAggregationLevel.DAILY
 ): Map<K, Map<V, SummingWrapper>> {
 
     val resultMap = mutableMapOf<K, Map<V, SummingWrapper>>()
-    val firstLevelMap = this.groupBy {
+    var firstLevelMap = this.groupBy {
         when (K::class) {
             TrainingType::class -> it.trainingType
             Sport::class -> it.sport
@@ -66,9 +66,11 @@ inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy
         }
     } as MutableMap<K, List<TrainingSportTrainingTypeMapping>>
 
+    firstLevelMap = firstLevelMap.toSortedMap()
+
     for (firstLevelKey in firstLevelMap.keys) {
         val firstLevelValue = firstLevelMap[firstLevelKey]!!
-        val secondLevelMap = when (V::class) {
+        var secondLevelMap = when (V::class) {
             TrainingType::class -> firstLevelValue.groupBy { it.trainingType }
             Sport::class -> firstLevelValue.groupBy { it.sport }
             LocalDate::class -> firstLevelValue.groupBy { it.training.date }
@@ -80,12 +82,14 @@ inline fun <reified K, reified V> List<TrainingSportTrainingTypeMapping>.groupBy
             else -> {}
         } as MutableMap<V, List<TrainingSportTrainingTypeMapping>>
 
+        secondLevelMap = secondLevelMap.toSortedMap()
+
         for (secondLevelKey in secondLevelMap.keys) {
             val trainingList = secondLevelMap[secondLevelKey]!!
             val aggregate: SummingWrapper = trainingList.fold(SummingWrapper()) { leftSummingWrapper, rightMappingObject ->
                 leftSummingWrapper + rightMappingObject
             }
-            val aggregateMap = resultMap.getOrPut(firstLevelKey) { mutableMapOf() }.toMutableMap()
+            var aggregateMap = resultMap.getOrPut(firstLevelKey) { mutableMapOf() }.toMutableMap()
             aggregateMap[secondLevelKey] = aggregate
             resultMap[firstLevelKey] = aggregateMap
         }
