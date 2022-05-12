@@ -3,4 +3,5 @@
     <string name="time">Zeit</string>
     <string name="distance">Distanz</string>
     <string name="repeats">Wiederholungen</string>
+    <string name="title_activity_training">training</string>
 </resources>
