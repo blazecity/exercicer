@@ -76,3 +76,13 @@ fun CardContentColumn(content: @Composable () -> Unit) {
         content()
     }
 }
+
+@Composable
+fun TextTitle(content: @Composable () -> Unit){
+    Column(
+        modifier = Modifier
+        .padding(7.dp)
+        .fillMaxWidth()) {
+        content()
+    }
+}
