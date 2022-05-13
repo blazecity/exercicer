@@ -19,7 +19,7 @@ data class Sport(
     @ColumnInfo(name = "sport_id")
     val id: Long? = null,
     @ColumnInfo(name = "sport_name") var name: String,
-    @ColumnInfo(name = "training_type_fk") var trainingTypeId: Long
+    @ColumnInfo(name = "training_type_fk") var trainingTypeId: Long? = null
 ): Comparable<Sport> {
     override fun toString(): String {
         return this.name

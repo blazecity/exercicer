@@ -33,9 +33,7 @@ fun SmallBadge(
 @Composable
 fun BaseCard(content: @Composable () -> Unit) {
     Card(
-        modifier = Modifier
-            .padding(7.dp)
-            .fillMaxWidth(),
+        modifier = Modifier.padding(vertical = 7.dp).fillMaxWidth(),
         shape = RoundedCornerShape(CornerSize(5.dp)),
         elevation = 4.dp
     ) {
