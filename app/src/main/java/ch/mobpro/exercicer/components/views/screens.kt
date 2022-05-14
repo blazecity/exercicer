@@ -49,12 +49,10 @@ fun ScreenTitle(title: String) {
 
 @Composable
 fun ScreenController(navController: NavHostController) {
-    val reportingViewModel: ReportingViewModel = hiltViewModel()
-
     NavHost(navController, startDestination = Route.ROUTE_TRAINING.route) {
 
         composable(Route.ROUTE_TRAINING.route) {
-            trainingPage(reportingViewModel = reportingViewModel)
+            TrainingPage()
         }
 
         composable(Route.ROUTE_GOAL.route) {
@@ -62,7 +60,7 @@ fun ScreenController(navController: NavHostController) {
         }
 
         composable(Route.ROUTE_REPORTING.route) {
-            ReportingPage(reportingViewModel = reportingViewModel)
+            ReportingPage()
         }
 
         composable(Route.ROUTE_ADMIN.route) {

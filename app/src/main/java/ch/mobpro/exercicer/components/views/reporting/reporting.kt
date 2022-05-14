@@ -6,7 +6,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.BaseCard
 import ch.mobpro.exercicer.components.cards.AggregationLevel
@@ -42,7 +42,8 @@ import ch.mobpro.exercicer.data.util.groupBy
 import ch.mobpro.exercicer.viewmodel.ReportingViewModel
 
 @Composable
-fun ReportingPage(reportingViewModel: ReportingViewModel) {
+fun ReportingPage() {
+    val reportingViewModel: ReportingViewModel = hiltViewModel()
     Column(modifier = Modifier.padding(10.dp)) {
         val list = reportingViewModel.filteredTrainings.observeAsState(emptyList())
         var groupByArgs by remember {
