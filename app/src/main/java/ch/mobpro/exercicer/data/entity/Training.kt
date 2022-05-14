@@ -28,5 +28,7 @@ data class Training(
     var distanceUnit: DistanceUnit? = null,
     var sets: Int? = null,
     var repeats: Int? = null,
-    var remarks: String? = null
+    var remarks: String? = null,
+    var intensity: Int? = null // soll nur bis 10 gehen
 )
+

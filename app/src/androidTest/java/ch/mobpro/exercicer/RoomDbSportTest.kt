@@ -37,6 +37,8 @@ class SportEntityDbTest: TestDatabase() {
 
             // Assert
             assertEquals(1, sportsFromDb.size)
+            assertEquals("Jogging", sportsFromDb.first().name)
+            assertEquals(trainingTypeId, sportsFromDb.first().trainingTypeId)
         }
     }
 
@@ -55,6 +57,7 @@ class SportEntityDbTest: TestDatabase() {
         val sportListAfterUpdate = sportDao.getAll().first()
 
         // Assert
+        assertEquals("Gym (Oberkörper)", sportListAfterUpdate.first().name)
         assertEquals(sportFromDb, sportListAfterUpdate.first())
         assertEquals(1, sportListAfterUpdate.size)
     }
@@ -78,6 +81,7 @@ class SportEntityDbTest: TestDatabase() {
         // Assert
         assertEquals(sportFromDb, sportListAfterUpdate.first())
         assertEquals(1, sportListAfterUpdate.size)
+        assertEquals(trainingTypeEnduranceId, sportListAfterUpdate.first().trainingTypeId)
     }
 
     @Test
