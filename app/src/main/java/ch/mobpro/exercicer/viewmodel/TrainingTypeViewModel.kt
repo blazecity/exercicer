@@ -2,9 +2,7 @@ package ch.mobpro.exercicer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
-import ch.mobpro.exercicer.data.repository.SportRepository
 import ch.mobpro.exercicer.data.repository.TrainingTypeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,8 +26,6 @@ class TrainingTypeViewModel @Inject constructor(private val repository: Training
     }
 
     fun insert(trainingType: TrainingType) = viewModelScope.launch { repository.insert(trainingType) }
-
     fun delete(trainingType: TrainingType) = viewModelScope.launch { repository.delete(trainingType) }
-
     fun update(trainingType: TrainingType) = viewModelScope.launch { repository.update(trainingType) }
 }

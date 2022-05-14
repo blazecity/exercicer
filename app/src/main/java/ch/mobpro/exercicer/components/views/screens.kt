@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.views.admin.AdminNavigationController
 import ch.mobpro.exercicer.components.views.reporting.ReportingPage
+import ch.mobpro.exercicer.viewmodel.ReportingViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 
 enum class Route(val route: String) {
@@ -48,7 +49,7 @@ fun ScreenTitle(title: String) {
 
 @Composable
 fun ScreenController(navController: NavHostController) {
-    val reportingViewModel: TrainingViewModel = hiltViewModel()
+    val reportingViewModel: ReportingViewModel = hiltViewModel()
 
     NavHost(navController, startDestination = Route.ROUTE_TRAINING.route) {
 

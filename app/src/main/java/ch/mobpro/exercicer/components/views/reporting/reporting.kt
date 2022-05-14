@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,13 +16,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ch.mobpro.exercicer.R
@@ -33,18 +34,21 @@ import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
 import ch.mobpro.exercicer.data.entity.mapping.SummingWrapper
+import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import ch.mobpro.exercicer.data.util.ReportingEntry
 import ch.mobpro.exercicer.data.util.getFormattedDistance
 import ch.mobpro.exercicer.data.util.getFormattedTime
 import ch.mobpro.exercicer.data.util.groupBy
-import ch.mobpro.exercicer.viewmodel.TrainingViewModel
-import java.time.LocalDate
+import ch.mobpro.exercicer.viewmodel.ReportingViewModel
 
 @Composable
-fun ReportingPage(reportingViewModel: TrainingViewModel) {
+fun ReportingPage(reportingViewModel: ReportingViewModel) {
     Column(modifier = Modifier.padding(10.dp)) {
-        var dataMap by remember {
-            mutableStateOf<Map<out Any, Map<out Any, SummingWrapper>>>(mutableMapOf())
+        val list = reportingViewModel.filteredTrainings.observeAsState(emptyList())
+        var groupByArgs by remember {
+            mutableStateOf<Triple<AggregationLevel?, AggregationLevel?, DateAggregationLevel?>>(
+                Triple(null, null, null)
+            )
         }
 
         var filterOpen by remember {
@@ -69,7 +73,7 @@ fun ReportingPage(reportingViewModel: TrainingViewModel) {
                             },
                             indication = null
                         ) {
-                              filterOpen = !filterOpen
+                            filterOpen = !filterOpen
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -83,34 +87,47 @@ fun ReportingPage(reportingViewModel: TrainingViewModel) {
                 }
 
                 if (filterOpen) {
-                    ReportingFilter { first, second, date ->
-                        val list = reportingViewModel.trainingList.value
-
-                        dataMap = when (first) {
-                            AggregationLevel.TRAINING_TYPE -> when (second) {
-                                AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>()
-                                AggregationLevel.DATE -> list.groupBy<TrainingType, String>(date)
-                                else -> mutableMapOf()
-                            }
-
-                            AggregationLevel.SPORT -> when (second) {
-                                AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>()
-                                AggregationLevel.DATE -> list.groupBy<Sport, String>(date)
-                                else -> mutableMapOf()
-                            }
-
-                            AggregationLevel.DATE -> when (second) {
-                                AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(date)
-                                AggregationLevel.SPORT -> list.groupBy<String, Sport>(date)
-                                else -> mutableMapOf()
-                            }
-                        }
+                    ReportingFilter(reportingViewModel) { first, second, dateAggr ->
+                        groupByArgs = Triple(first, second, dateAggr)
                     }
                 }
             }
         }
 
-        ReportingList(dataMap = dataMap)
+        ReportingList(list.value) {
+            groupMap(it, groupByArgs)
+        }
+    }
+}
+
+private fun groupMap(
+    list: List<TrainingSportTrainingTypeMapping>,
+    groupByArgs: Triple<AggregationLevel?, AggregationLevel?, DateAggregationLevel?>
+): Map<out Any, Map<out Any, SummingWrapper>>  {
+
+    if (groupByArgs.first == null || groupByArgs.second == null || groupByArgs.third == null) {
+        return mutableMapOf()
+    }
+
+    return when (groupByArgs.first) {
+        AggregationLevel.TRAINING_TYPE -> when (groupByArgs.second) {
+            AggregationLevel.SPORT -> list.groupBy<TrainingType, Sport>()
+            AggregationLevel.DATE -> list.groupBy<TrainingType, String>(groupByArgs.third!!)
+            else -> mutableMapOf()
+        }
+
+        AggregationLevel.SPORT -> when (groupByArgs.second) {
+            AggregationLevel.TRAINING_TYPE -> list.groupBy<Sport, TrainingType>()
+            AggregationLevel.DATE -> list.groupBy<Sport, String>(groupByArgs.third!!)
+            else -> mutableMapOf()
+        }
+
+        AggregationLevel.DATE -> when (groupByArgs.second) {
+            AggregationLevel.TRAINING_TYPE -> list.groupBy<String, TrainingType>(groupByArgs.third!!)
+            AggregationLevel.SPORT -> list.groupBy<String, Sport>(groupByArgs.third!!)
+            else -> mutableMapOf()
+        }
+        else -> mutableMapOf()
     }
 }
 
@@ -140,7 +157,11 @@ fun ReportingRow(bold: Boolean, vararg rowValues: String) {
 }
 
 @Composable
-fun ReportingList(dataMap: Map<out Any, Map<out Any, SummingWrapper>>) {
+fun ReportingList(
+    list: List<TrainingSportTrainingTypeMapping>,
+    groupList: (List<TrainingSportTrainingTypeMapping>) -> Map<out Any, Map<out Any, SummingWrapper>>
+) {
+    val dataMap = groupList(list)
     LazyColumn {
         for (key in dataMap.keys) {
             val reportingEntries = mutableListOf<ReportingEntry>()
@@ -174,13 +195,16 @@ fun ReportingCard(title: String, reportingEntries: List<ReportingEntry>, sumDist
 }
 
 @Composable
-fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAggregationLevel) -> Unit) {
+fun ReportingFilter(
+    reportingViewModel: ReportingViewModel,
+    onFilterChange: (AggregationLevel, AggregationLevel, DateAggregationLevel) -> Unit
+) {
     var fromDate by remember {
-        mutableStateOf(LocalDate.now())
+        mutableStateOf(reportingViewModel.getFromDate())
     }
 
     var toDate by remember {
-        mutableStateOf(LocalDate.now())
+        mutableStateOf(reportingViewModel.getToDate())
     }
 
     var firstAggregationLevel by remember {
@@ -201,7 +225,13 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)) {
-                DatePickerField("Von") { date -> fromDate = date }
+                DatePickerField(fromDate, "Von") { date ->
+                    reportingViewModel.setFromDate(date)
+                    if (firstAggregationLevel != null && secondAggregationLevel != null) {
+                        onFilterChange(firstAggregationLevel!!,
+                            secondAggregationLevel!!, dateAggregationLevel)
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.padding(horizontal = 20.dp))
@@ -209,7 +239,13 @@ fun ReportingFilter(onFilterChange: (AggregationLevel, AggregationLevel, DateAgg
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)) {
-                DatePickerField("Bis") { date -> toDate = date }
+                DatePickerField(toDate, "Bis") { date ->
+                    reportingViewModel.setToDate(date)
+                    if (firstAggregationLevel != null && secondAggregationLevel != null) {
+                        onFilterChange(firstAggregationLevel!!,
+                            secondAggregationLevel!!, dateAggregationLevel)
+                    }
+                }
             }
         }
 
@@ -445,9 +481,4 @@ fun ChipGroup(label: String, content: @Composable () -> Unit) {
             content()
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun Preview() {
 }

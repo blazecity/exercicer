@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -67,9 +66,10 @@ fun AdminNavigationController() {
                         onSave = {
                             trainingTypeViewModel.insert(newTrainingType)
                             showDialog = false
+                            newTrainingType = TrainingType(name = "")
                         }
                     ) {
-                        AddTrainingType(newTrainingType)
+                        TrainingTypeDialog(newTrainingType)
                     }
                 }
             }
@@ -87,7 +87,24 @@ fun AdminNavigationController() {
                     mutableStateOf(Sport(name = ""))
                 }
 
-                SportList(viewModel = sportViewModel)
+                SportList(sportViewModel, trainingTypeViewModel)
+
+                if (showDialog) {
+
+                    FullScreenDialog(
+                        title = "Neue Sportart",
+                        visible = showDialog,
+                        onClose = { showDialog = false },
+                        onSave = {
+                            sportViewModel.insert(newSport)
+                            showDialog = false
+                            newSport = Sport(name = "")
+                        }
+                    ) {
+                        val trainingTypeList = trainingTypeViewModel.trainingTypeList.collectAsState().value
+                        SportDialog(newSport, trainingTypeList.first(), trainingTypeList)
+                    }
+                }
             }
         }
     }

@@ -17,6 +17,5 @@ class TrainingRepository @Inject constructor(private val dao: TrainingDao) {
     suspend fun update(training: Training) = dao.update(training)
     fun getAll(): Flow<List<TrainingSportTrainingTypeMapping>> =
         dao.getAll().flowOn(Dispatchers.Default).conflate()
-    fun getAllByDate(fromDate: LocalDate, toDate: LocalDate): Flow<List<TrainingSportTrainingTypeMapping>> =
-        dao.getAllByDate(fromDate, toDate).flowOn(Dispatchers.Default).conflate()
+    fun getAllByDate(fromDate: LocalDate, toDate: LocalDate) = dao.getAllByDate(fromDate, toDate)
 }

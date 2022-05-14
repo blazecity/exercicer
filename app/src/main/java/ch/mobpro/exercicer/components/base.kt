@@ -18,17 +18,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -80,15 +77,17 @@ fun ListSection(content: @Composable () -> Unit) {
     }
 }
 
+interface Listable {
+    val id: Long?
+}
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun <T> ListDeleteAction(items: List<T>, dismissAction: (T) -> Unit) {
+fun ListDeleteAction(list: List<Listable>, dismissAction: (Listable) -> Unit, onClick: (Listable) -> Unit) {
     ListSection {
         LazyColumn(Modifier.scrollable(rememberScrollState(), orientation = Orientation.Vertical)) {
-
-            itemsIndexed(items = items, itemContent = { index, item ->
+            itemsIndexed(list, key = {_, listItem -> listItem.id!!}, itemContent = {index, item ->
                 val dismissState = rememberDismissState()
-
                 if (dismissState.isDismissed(DismissDirection.EndToStart)) {
                     dismissAction(item)
                 }
@@ -129,11 +128,9 @@ fun <T> ListDeleteAction(items: List<T>, dismissAction: (T) -> Unit) {
                     Row(modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)) {
-                        ListItem(title = item.toString()) {
+                        ListItem(title = item.toString(), onClick = { onClick(item) })
 
-                        }
-
-                        if (index < items.size - 1) {
+                        if (index < list.size - 1) {
                             ListDivider()
                         }
                     }
@@ -210,7 +207,7 @@ fun FullScreenDialog(
         Dialog(onDismissRequest = { }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Surface(
                 modifier = Modifier.padding(top = 10.dp, start = 5.dp, end = 5.dp),
-                shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
+                shape = RoundedCornerShape(10.dp),
                 elevation = 10.dp
             ) {
                 Column(modifier = Modifier
@@ -243,6 +240,50 @@ fun FullScreenDialog(
                     }
 
                     content()
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun Dropdown(
+    title: String,
+    list: List<Listable>,
+    selectedItem: Listable? = null,
+    onItemClick: (Listable) -> Unit
+) {
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    var selectedOption by remember {
+        mutableStateOf(selectedItem)
+    }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {expanded = !expanded}, modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            selectedOption.toString(),
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(text = title)},
+            onValueChange = {},
+            readOnly = true
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            list.forEach { item ->
+                DropdownMenuItem(
+                    onClick = {
+                        selectedOption = item
+                        expanded = false
+                        onItemClick(item)
+                    }
+                ) {
+                    Text(item.toString())
                 }
             }
         }
