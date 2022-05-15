@@ -1,6 +1,7 @@
 package ch.mobpro.exercicer.data.entity
 
 import androidx.room.*
+import ch.mobpro.exercicer.components.Listable
 import java.time.LocalDate
 
 @Entity(
@@ -12,20 +13,26 @@ import java.time.LocalDate
             entity = Sport::class,
             parentColumns = ["sport_id"],
             childColumns = ["sport_goal_fk"]
+        ),
+        ForeignKey(
+            entity = TrainingType::class,
+            parentColumns = ["training_type_id"],
+            childColumns = ["training_type_goal_fk"]
         )
     ]
 )
 data class Goal(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "goal_id")
-    val id: Long? = null,
-    @ColumnInfo(name = "sport_goal_fk") var sportId: Long,
+    override val id: Long? = null,
+    @ColumnInfo(name = "sport_goal_fk") var sportId: Long? = null,
+    @ColumnInfo(name = "training_type_goal_fk") var trainingTypeId: Long? = null,
     var start: LocalDate,
     var end: LocalDate,
     var trainingTimeGoalHours: Int? = null,
     var trainingTimeGoalMinutes: Int? = null,
     var trainingTimeGoalSeconds: Int? = null,
     var distanceGoalInMetres: Int? = null,
-    var distanceUnit: DistanceUnit? = null,
+    var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
     var trainingsPerWeek: Int? = null
-)
+): Listable

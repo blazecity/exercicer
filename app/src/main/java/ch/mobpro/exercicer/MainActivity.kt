@@ -12,10 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ch.mobpro.exercicer.components.views.NavigationController
-import ch.mobpro.exercicer.data.entity.Sport
-import ch.mobpro.exercicer.data.entity.Training
-import ch.mobpro.exercicer.data.entity.TrainingType
+import ch.mobpro.exercicer.data.entity.*
 import ch.mobpro.exercicer.ui.theme.ExercicerTheme
+import ch.mobpro.exercicer.viewmodel.GoalViewModel
 import ch.mobpro.exercicer.viewmodel.SportViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingTypeViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
@@ -27,6 +26,7 @@ class MainActivity : ComponentActivity() {
     private val trainingViewModel: TrainingViewModel by viewModels()
     private val sportViewModel: SportViewModel by viewModels()
     private val trainingTypeViewModel: TrainingTypeViewModel by viewModels()
+    private val goalViewModel: GoalViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,5 +78,33 @@ class MainActivity : ComponentActivity() {
         trainingViewModel.insert(training2)
         trainingViewModel.insert(training3)
         trainingViewModel.insert(training4)
+
+        val goal1 = Goal(
+            start = LocalDate.of(2021, 4, 6),
+            end = LocalDate.now(),
+            sportId = sport1.id,
+            distanceGoalInMetres = 1000,
+            distanceUnit = DistanceUnit.KILOMETERS,
+            trainingTimeGoalHours = 3
+        )
+
+        val goal2 = Goal(
+            start = LocalDate.of(2022, 1, 1),
+            end = LocalDate.of(2022, 5, 1),
+            trainingTypeId = trainingType2.id,
+            trainingTimeGoalHours = 2
+        )
+
+        val goal3 = Goal(
+            start = LocalDate.of(2021, 4, 5),
+            end = LocalDate.of(2021, 4, 7),
+            trainingTypeId = trainingType1.id,
+            trainingTimeGoalHours = 5
+        )
+
+        goalViewModel.insert(goal1)
+        goalViewModel.insert(goal2)
+        goalViewModel.insert(goal3)
+
     }
 }

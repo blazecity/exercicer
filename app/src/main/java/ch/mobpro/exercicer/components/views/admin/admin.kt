@@ -112,29 +112,29 @@ fun AdminNavigationController() {
 
 @Composable
 fun AdminPage(navController: NavController) {
-    Column(
-        Modifier
-            .padding(10.dp)
-            .scrollable(rememberScrollState(), orientation = Orientation.Vertical)) {
-        ScreenTitle(title = "Administration")
+    Page(title = "Administration") {
+        Column(
+            Modifier
+                .scrollable(rememberScrollState(), orientation = Orientation.Vertical)) {
 
-        ListSection {
-            ListItem(
-                title = "Trainingsarten",
-                description = "Verwalten der Kategorien (z. B. Ausdauer oder Kraft)",
-                iconId = R.drawable.training_type,
-            ) {
-                navController.navigate(AdminRoute.TRAINING_TYPES.route)
-            }
+            ListSection {
+                ListItem(
+                    title = "Trainingsarten",
+                    description = "Verwalten der Kategorien (z. B. Ausdauer oder Kraft)",
+                    iconId = R.drawable.training_type,
+                ) {
+                    navController.navigate(AdminRoute.TRAINING_TYPES.route)
+                }
 
-            ListDivider()
+                ListDivider()
 
-            ListItem(
-                title = "Sportarten",
-                description = "Verwalten der verfügbaren Sportarten",
-                iconId = R.drawable.sports
-            ) {
-                navController.navigate(AdminRoute.SPORTS.route)
+                ListItem(
+                    title = "Sportarten",
+                    description = "Verwalten der verfügbaren Sportarten",
+                    iconId = R.drawable.sports
+                ) {
+                    navController.navigate(AdminRoute.SPORTS.route)
+                }
             }
         }
     }

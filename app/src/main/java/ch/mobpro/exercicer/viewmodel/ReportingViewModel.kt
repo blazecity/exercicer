@@ -1,7 +1,6 @@
 package ch.mobpro.exercicer.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import ch.mobpro.exercicer.data.repository.TrainingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,7 +18,7 @@ class ReportingViewModel @Inject constructor(private val repository: TrainingRep
         repository.getAllByDate(it.first, it.second)
     }
 
-    val filteredTrainings = _filteredTrainings.asLiveData()
+    val filteredTrainings = _filteredTrainings
 
     fun getFromDate(): LocalDate = dates.value.first
     fun setFromDate(fromDate: LocalDate) {

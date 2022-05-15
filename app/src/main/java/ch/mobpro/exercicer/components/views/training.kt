@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import ch.mobpro.exercicer.components.*
+import ch.mobpro.exercicer.components.cards.*
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 

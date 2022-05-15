@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,10 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ch.mobpro.exercicer.R
-import ch.mobpro.exercicer.components.BaseCard
+import ch.mobpro.exercicer.components.cards.BaseCard
+import ch.mobpro.exercicer.components.Page
 import ch.mobpro.exercicer.components.cards.AggregationLevel
 import ch.mobpro.exercicer.components.date.DatePickerField
-import ch.mobpro.exercicer.components.views.ScreenTitle
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
@@ -44,8 +43,8 @@ import ch.mobpro.exercicer.viewmodel.ReportingViewModel
 @Composable
 fun ReportingPage() {
     val reportingViewModel: ReportingViewModel = hiltViewModel()
-    Column(modifier = Modifier.padding(10.dp)) {
-        val list = reportingViewModel.filteredTrainings.observeAsState(emptyList())
+    Page(title = "Reporting") {
+        val list = reportingViewModel.filteredTrainings.collectAsState(initial = emptyList())
         var groupByArgs by remember {
             mutableStateOf<Triple<AggregationLevel?, AggregationLevel?, DateAggregationLevel?>>(
                 Triple(null, null, null)
@@ -55,8 +54,6 @@ fun ReportingPage() {
         var filterOpen by remember {
             mutableStateOf(false)
         }
-        
-        ScreenTitle(title = "Reporting")
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -175,11 +172,13 @@ fun ReportingList(
                 sumDistance += subValue.sumMeters
                 reportingEntries.add(
                     ReportingEntry(subKey.toString(),
-                        getFormattedDistance(subValue.sumMeters),
+                        getFormattedDistance(subValue.sumMeters)!!,
                         getFormattedTime(subValue.sumSeconds))
                 )
             }
-            this.item { ReportingCard(key.toString(), reportingEntries, sumDistance, sumTime) }
+            this.item {
+                ReportingCard(key.toString(), reportingEntries, sumDistance, sumTime)
+            }
         }
     }
 }
@@ -188,7 +187,7 @@ fun ReportingList(
 @Composable
 fun ReportingCard(title: String, reportingEntries: List<ReportingEntry>, sumDistance: Int, sumTime: Int) {
     BaseCard {
-        ReportingRow(true, title, getFormattedDistance(sumDistance), getFormattedTime(sumTime))
+        ReportingRow(true, title, getFormattedDistance(sumDistance)!!, getFormattedTime(sumTime))
         reportingEntries.forEach {
             ReportingRow(false, it.description, it.formattedDistance, it.formattedTime)
         }
@@ -200,11 +199,11 @@ fun ReportingFilter(
     reportingViewModel: ReportingViewModel,
     onFilterChange: (AggregationLevel, AggregationLevel, DateAggregationLevel) -> Unit
 ) {
-    var fromDate by remember {
+    val fromDate by remember {
         mutableStateOf(reportingViewModel.getFromDate())
     }
 
-    var toDate by remember {
+    val toDate by remember {
         mutableStateOf(reportingViewModel.getToDate())
     }
 

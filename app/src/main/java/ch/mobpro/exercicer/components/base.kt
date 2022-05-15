@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -31,7 +32,61 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import ch.mobpro.exercicer.components.views.ScreenTitle
 import ch.mobpro.exercicer.ui.theme.LightRed
+import kotlinx.coroutines.delay
+
+@Composable
+fun Page(modifier: Modifier = Modifier, title: String, content: @Composable () -> Unit) {
+    Column(modifier = modifier.padding(10.dp)) {
+        ScreenTitle(title = title)
+        content()
+    }
+}
+
+@Composable
+fun StatusBar(effective: Float, target: Float) {
+    var progress by remember { mutableStateOf(0.0f) }
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress
+    )
+
+    var enabled by remember {
+        mutableStateOf(true)
+    }
+
+    LaunchedEffect(enabled, effective, target) {
+        while ((progress < effective / target)) {
+            progress += 0.01f
+            delay(1)
+        }
+    }
+
+    if (progress >= 1f) {
+        enabled = false
+    }
+
+    LinearProgressIndicator(
+        progress = animatedProgress,
+        modifier = Modifier
+            .height(13.dp)
+            .clip(RoundedCornerShape(8.dp)),
+        color = if (progress >= 1f) MaterialTheme.colors.primary else LightRed
+    )
+
+}
+
+@Composable
+fun LabeledText(content: String, label: String) {
+    Column {
+        Text(
+            label,
+            color = Color.Gray,
+            fontSize = 11.sp
+        )
+        Text(content)
+    }
+}
 
 @Composable
 fun ListItem(
@@ -136,6 +191,62 @@ fun ListDeleteAction(list: List<Listable>, dismissAction: (Listable) -> Unit, on
                     }
                 }
             })
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ItemDeleteAction(
+    item: Listable, dismissAction: (Listable) -> Unit,
+    content: @Composable () -> Unit
+) {
+    val dismissState = rememberDismissState()
+    if (dismissState.isDismissed(DismissDirection.EndToStart)) {
+        dismissAction(item)
+    }
+
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.EndToStart),
+        dismissThresholds = {
+            FractionalThreshold(if (it == DismissDirection.EndToStart) 0.1f else 0.05f)
+        },
+        background = {
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    DismissValue.Default -> Color.White
+                    else -> LightRed
+                }
+            )
+
+            val scale by animateFloatAsState(
+                if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(color),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "delete icon",
+                    modifier = Modifier
+                        .scale(scale)
+                        .padding(end = 7.dp)
+                )
+            }
+        }
+    ) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+        ) {
+
+            content()
         }
     }
 }

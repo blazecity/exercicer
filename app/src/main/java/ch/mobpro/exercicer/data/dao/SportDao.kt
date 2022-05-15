@@ -4,6 +4,7 @@ import androidx.room.*
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface SportDao {
