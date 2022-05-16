@@ -53,7 +53,7 @@ fun ScreenController(navController: NavHostController) {
     NavHost(navController, startDestination = Route.ROUTE_TRAINING.route) {
 
         composable(Route.ROUTE_TRAINING.route) {
-            trainingPage(reportingViewModel = reportingViewModel)
+            trainingPage(trainingViewModel = reportingViewModel)
         }
 
         composable(Route.ROUTE_GOAL.route) {

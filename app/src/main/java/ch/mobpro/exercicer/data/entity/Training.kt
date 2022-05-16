@@ -29,6 +29,7 @@ data class Training(
     var sets: Int? = null,
     var repeats: Int? = null,
     var remarks: String? = null,
-    var intensity: Int? = null // soll nur bis 10 gehen
+    var intensity: Int? = null, // soll nur bis 10 gehen
+    var comment: String? = null
 )
 
