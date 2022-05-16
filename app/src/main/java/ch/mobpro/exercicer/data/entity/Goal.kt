@@ -27,12 +27,11 @@ data class Goal(
     override val id: Long? = null,
     @ColumnInfo(name = "sport_goal_fk") var sportId: Long? = null,
     @ColumnInfo(name = "training_type_goal_fk") var trainingTypeId: Long? = null,
-    var start: LocalDate,
-    var end: LocalDate,
+    var start: LocalDate = LocalDate.now(),
+    var end: LocalDate = LocalDate.now(),
     var trainingTimeGoalHours: Int? = null,
     var trainingTimeGoalMinutes: Int? = null,
     var trainingTimeGoalSeconds: Int? = null,
     var distanceGoalInMetres: Int? = null,
-    var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
-    var trainingsPerWeek: Int? = null
+    var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS
 ): Listable

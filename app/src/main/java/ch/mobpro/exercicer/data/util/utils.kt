@@ -10,7 +10,6 @@ import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
-import kotlin.math.min
 
 
 fun Double.round(decimals: Int): Double {
@@ -21,11 +20,11 @@ fun Double.round(decimals: Int): Double {
 
 fun getFormattedDistance(distanceInMetres: Int?, distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS): String? {
     if (distanceInMetres == null) return null
-    if (distanceUnit == DistanceUnit.KILOMETERS) {
+    return if (distanceUnit == DistanceUnit.KILOMETERS) {
         val distanceInKm = distanceInMetres / 1000.0
         distanceInKm.round(2)
-        return "$distanceInKm km"
-    } else return "$distanceInMetres m"
+        "$distanceInKm km"
+    } else "$distanceInMetres m"
 }
 
 fun getFormattedTime(timeInSeconds: Int): String {

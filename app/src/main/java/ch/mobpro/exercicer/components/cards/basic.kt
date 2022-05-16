@@ -1,5 +1,6 @@
 package ch.mobpro.exercicer.components.cards
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,9 +32,9 @@ fun SmallBadge(
 }
 
 @Composable
-fun BaseCard(content: @Composable () -> Unit) {
+fun BaseCard(onClick: () -> Unit = {}, content: @Composable () -> Unit) {
     Card(
-        modifier = Modifier.padding(vertical = 7.dp).fillMaxWidth(),
+        modifier = Modifier.padding(vertical = 7.dp).fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(CornerSize(5.dp)),
         elevation = 4.dp
     ) {

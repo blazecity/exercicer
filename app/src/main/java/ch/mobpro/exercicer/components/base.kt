@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -26,13 +27,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import ch.mobpro.exercicer.components.views.ScreenTitle
+import ch.mobpro.exercicer.data.entity.DistanceUnit
 import ch.mobpro.exercicer.ui.theme.LightRed
 import kotlinx.coroutines.delay
 
@@ -45,7 +51,7 @@ fun Page(modifier: Modifier = Modifier, title: String, content: @Composable () -
 }
 
 @Composable
-fun StatusBar(effective: Float, target: Float) {
+fun StatusBar(modifier: Modifier = Modifier, effective: Float, target: Float) {
     var progress by remember { mutableStateOf(0.0f) }
     val animatedProgress by animateFloatAsState(
         targetValue = progress
@@ -68,7 +74,7 @@ fun StatusBar(effective: Float, target: Float) {
 
     LinearProgressIndicator(
         progress = animatedProgress,
-        modifier = Modifier
+        modifier = modifier
             .height(13.dp)
             .clip(RoundedCornerShape(8.dp)),
         color = if (progress >= 1f) MaterialTheme.colors.primary else LightRed
@@ -85,6 +91,28 @@ fun LabeledText(content: String, label: String) {
             fontSize = 11.sp
         )
         Text(content)
+    }
+}
+
+@Composable
+fun LabeledSwitch(label: String, onCheckedChange: (Boolean) -> Unit) {
+    var isChecked by remember {
+        mutableStateOf(false)
+    }
+
+    Column(modifier = Modifier.padding(top = 15.dp)) {
+        Text(
+            label,
+            color = Color.Gray,
+            fontSize = 11.sp
+        )
+        Switch(
+            checked = isChecked,
+            onCheckedChange = {
+                onCheckedChange(it)
+                isChecked = it
+            }
+        )
     }
 }
 
@@ -399,5 +427,107 @@ fun Dropdown(
             }
         }
     }
+}
+
+@Composable
+fun DistancePicker(
+    initialDistance: Int = 0,
+    initialDistanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
+    onChange: (Int, DistanceUnit) -> Unit
+) {
+    var distance by remember {
+        mutableStateOf(initialDistance)
+    }
+
+    var distanceUnit by remember {
+        mutableStateOf(initialDistanceUnit)
+    }
+
+    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+        IntegerInput(label = "Distanz", initialValue = distance) {
+            distance = it
+            onChange(distance, distanceUnit)
+        }
+
+        Dropdown(
+            title = "Einheit",
+            list = listOf(DistanceUnit.METERS, DistanceUnit.KILOMETERS),
+            selectedItem = distanceUnit
+        ) {
+            distanceUnit = it as DistanceUnit
+            onChange(distance, distanceUnit)
+        }
+    }
+}
+
+@Composable
+fun SecondsTimePicker(
+    hours: Int = 0,
+    minutes: Int = 0,
+    seconds: Int = 0,
+    onChange: (Int, Int, Int) -> Unit
+) {
+    var timeHours by remember {
+        mutableStateOf(hours)
+    }
+
+    var timeMinutes by remember {
+        mutableStateOf(minutes)
+    }
+
+    var timeSeconds by remember {
+        mutableStateOf(seconds)
+    }
+
+    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+        IntegerInput(
+            modifier = Modifier.weight(1f),
+            label = "Stunden",
+            initialValue = timeHours,
+            onValueChange = {
+                timeHours = it
+                onChange(timeHours, timeMinutes, timeSeconds)
+            }
+        )
+
+        IntegerInput(
+            modifier = Modifier.weight(1f),
+            label = "Minuten",
+            initialValue = timeMinutes,
+            onValueChange = {
+                timeMinutes = it
+                onChange(timeHours, timeMinutes, timeSeconds)
+            }
+        )
+
+        IntegerInput(
+            modifier = Modifier.weight(1f),
+            label = "Sekunden",
+            initialValue = timeSeconds,
+            onValueChange = {
+                timeSeconds = it
+                onChange(timeHours, timeMinutes, timeSeconds)
+            }
+        )
+    }
+}
+
+@Composable
+fun IntegerInput(modifier: Modifier = Modifier, label: String, initialValue: Int, onValueChange: (Int) -> Unit) {
+    var value by remember {
+        mutableStateOf(initialValue)
+    }
+
+    OutlinedTextField(
+        modifier = modifier.padding(end = 10.dp),
+        textStyle = TextStyle(textAlign = TextAlign.Right),
+        label = { Text(label) },
+        value = value.toString(),
+        onValueChange = {
+                        value = it.toInt()
+                        onValueChange(value)
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    )
 }
 

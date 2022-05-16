@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ch.mobpro.exercicer.components.Dropdown
@@ -45,7 +44,7 @@ fun SportList(viewModel: SportViewModel, trainingTypeViewModel: TrainingTypeView
             }
         ) {
             val trainingTypes = trainingTypeViewModel.trainingTypeList.collectAsState().value
-            val trainingType = sportMap.get(editableSport)
+            val trainingType = sportMap[editableSport]
             SportDialog(editableSport, trainingType ?: trainingTypes.first(), trainingTypes)
         }
     }
