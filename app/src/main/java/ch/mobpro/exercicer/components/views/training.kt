@@ -1,6 +1,7 @@
 package ch.mobpro.exercicer.components.views
 
 import android.annotation.SuppressLint
+import android.util.Half.toFloat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -29,7 +30,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import ch.mobpro.exercicer.components.cards.*
+import ch.mobpro.exercicer.components.date.DatePickerField
+import ch.mobpro.exercicer.components.views.goals.FullScreenGoalDialog
+import ch.mobpro.exercicer.components.views.goals.GoalsList
+import ch.mobpro.exercicer.data.entity.Goal
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
+import ch.mobpro.exercicer.data.util.getFormattedString
 import ch.mobpro.exercicer.viewmodel.SportViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 import java.time.LocalDate
@@ -38,60 +44,55 @@ import java.time.LocalDate
 fun TrainingPage() {
     val trainingViewModel: TrainingViewModel = hiltViewModel()
 
-    Column(
-        Modifier
-            .padding(10.dp)
-            .scrollable(rememberScrollState(), orientation = Orientation.Vertical)
-    ) {
-        ScreenTitle(title = "Training")
-
-        val list = trainingViewModel.trainingList.collectAsState().value // was müsste ich hier anders machen?
-        if (list.isNotEmpty()){
-            LazyColumn() {
-                items(items = list) { list ->
-                    DoTrainingCards(trainingSportTrainingType = list)
-                }
-            }
-        } else {
-            Text("keine Trainings aufgezeichnet.")
-        }
-
-        AddTrainingDialog()
-    }
-}
-
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter") // weil im Scaffold Teil die Klammern nicht gemraucht werden
-@Preview(showBackground = true)
-@Composable
-private fun AddTrainingDialog(){
-
     var showDialog by remember {
         mutableStateOf(false) // false setzen, wenn anders implementiert
     }
-    val trainingViewModel: TrainingViewModel = hiltViewModel()
 
     var newTraining by remember {
         mutableStateOf(Training(date = LocalDate.MAX, sportId = 0))
     }
 
-    // geht noch nicht
-    FloatingActionButton(onClick = { showDialog = true }) {
-        Icon(Icons.Default.Add, "add button")
-    }
-
-
-    FullScreenDialog(
-        title = "Neues Training",
-        visible = showDialog,
-        onClose = { showDialog = false },
-        onSave = {
-            trainingViewModel.insert(newTraining)
-            showDialog = false
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                showDialog = true
+            }) {
+                Icon(Icons.Default.Add, "add button")
+            }
         }
-    ) {
-        AddTraining(newTraining)
-    }
+    ) { paddingValues ->
+        Page(modifier = Modifier.padding(paddingValues), title = "Training") {
+            TrainingList(trainingViewModel)
 
+            if (showDialog) {
+                FullScreenDialog(
+                    title = "Neues Training",
+                    visible = showDialog,
+                    onClose = { showDialog = false },
+                    onSave = {
+                        trainingViewModel.insert(newTraining)
+                        showDialog = false
+                    }
+                ) {
+                    AddTraining(newTraining)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrainingList(trainingViewModel: TrainingViewModel){
+    val list = trainingViewModel.trainingList.collectAsState().value
+    if (list.isNotEmpty()){
+        LazyColumn() {
+            items(items = list) { list ->
+                DoTrainingCards(trainingSportTrainingType = list)
+            }
+        }
+    } else {
+        Text("keine Trainings aufgezeichnet.")
+    }
 }
 
 @Composable
@@ -119,50 +120,71 @@ fun AddTraining(newTraining: Training) {
         mutableStateOf("")
     }
 
-    OutlinedTextField(
-        value = selectedText,
-        onValueChange = { selectedText = it },
-        modifier = Modifier
-            .fillMaxWidth()
-            .onGloballyPositioned { coordinates ->
-                // This value is used to assign to the DropDown the same width
-                mTextFieldSize = coordinates.size.toSize()
-            },
-        readOnly = true,
-        label = {Text("Sportart")},
-        trailingIcon = {
-            Icon(icon,"contentDescription",
-                Modifier.clickable { dropdownExpanded = !dropdownExpanded })
-        }
-    )
-    DropdownMenu(
-        expanded = dropdownExpanded,
-        onDismissRequest = { dropdownExpanded = false },
-        modifier = Modifier
-            .width(with(LocalDensity.current){mTextFieldSize.width.toDp()}),
-    ) {
-        allSports.forEach { label ->
-            DropdownMenuItem(onClick = {
-                selectedText = label.name
-                newTraining.sportId = label.id ?: 0 // Fehler: falls Label 0 => SportID 0
-                dropdownExpanded = false
-            }) {
-                Text(text = label.name)
-            }
-        }
+    val date by remember {
+        mutableStateOf(LocalDate.now())
     }
 
-    OutlinedTextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp),
-        label = { Text("Name") },
-        value = text,
-        onValueChange = {
-            text = it
-            newTraining.comment = it
+    Column {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                DatePickerField(date, "Datum") { date ->
+                    newTraining.date = date
+                }
+            }
+
+            //Spacer(modifier = Modifier.padding(horizontal = 20.dp)) //nötig?
+
         }
-    )
+
+        OutlinedTextField(
+            value = selectedText,
+            onValueChange = { selectedText = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    // This value is used to assign to the DropDown the same width
+                    mTextFieldSize = coordinates.size.toSize()
+                },
+            readOnly = true,
+            label = { Text("Sportart") },
+            trailingIcon = {
+                Icon(icon, "contentDescription",
+                    Modifier.clickable { dropdownExpanded = !dropdownExpanded })
+            }
+        )
+        DropdownMenu(
+            expanded = dropdownExpanded,
+            onDismissRequest = { dropdownExpanded = false },
+            modifier = Modifier
+                .width(with(LocalDensity.current) { mTextFieldSize.width.toDp() }),
+        ) {
+            allSports.forEach { label ->
+                DropdownMenuItem(onClick = {
+                    selectedText = label.name
+                    newTraining.sportId = label.id ?: 0 // Fehler: falls Label 0 => SportID 0
+                    dropdownExpanded = false
+                }) {
+                    Text(text = label.name)
+                }
+            }
+        }
+
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            label = { Text("Kommentar") },
+            value = text,
+            onValueChange = {
+                text = it
+                newTraining.comment = it
+            }
+        )
+    }
 }
 
 @Composable
@@ -175,8 +197,8 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
             }
             CardContentColumn {
                 Text(trainingSportTrainingType.sport.name) //Name des Sports
-                val dateInLong = trainingSportTrainingType.training.date.toEpochDay() //Datum des Sports
-                Text("$trainingSportTrainingType")
+                val dateAsString = trainingSportTrainingType.training.date.getFormattedString() //Datum des Sports
+                Text(dateAsString)
             }
             CardContentColumn {
                 val trainingsID = trainingSportTrainingType.sport.trainingTypeId //ID der Kategorie
@@ -187,10 +209,28 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
                 //val distance = a.key.getFormattedTrainingDistance() ?: a.key.intensity ?: "no data"
                 //Text("$distance")
                 // Übergangslösung
-                val time = trainingSportTrainingType.training.trainingTimeHour
-                Text("Hour: $time")
-                val distanceUnit = trainingSportTrainingType.training.distanceUnit
-                Text("Distanz: $distanceUnit")
+                val timeH = trainingSportTrainingType.training.trainingTimeHour
+                val timeM = trainingSportTrainingType.training.trainingTimeMinutes
+                val timeS = trainingSportTrainingType.training.trainingTimeSeconds
+                if (timeH != null || timeM != null) { // keine Sekundenangabe, da zu detailliert
+                    if (timeH != null && timeM != null) {
+                        Text("$timeH h $timeM min" )
+                    } else if (timeH == null){
+                        Text("$timeM min" )
+                    } else if (timeM == null) {
+                        Text("$timeH h")
+                    }
+                } else (Text("keine Zeitangabe"))
+                val distance = trainingSportTrainingType.training.trainingDistanceInMeters
+                if (distance != null) {
+                    if (distance > 1000) {
+                        val distanceKm: Float = distance.toFloat() / 1000
+                        Text("Distanz: $distanceKm km")
+                    } else {
+                        Text("Distanz: $distance m")
+                    }
+                } else (Text("keine Distanzangabe"))
+
             }
         }
     }
