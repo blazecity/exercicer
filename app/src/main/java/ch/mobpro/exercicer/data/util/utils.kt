@@ -1,6 +1,7 @@
 package ch.mobpro.exercicer.data.util
 
 
+import ch.mobpro.exercicer.data.entity.DistanceUnit
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
@@ -17,10 +18,13 @@ fun Double.round(decimals: Int): Double {
     return kotlin.math.round(this * multiplier) / multiplier
 }
 
-fun getFormattedDistance(distanceInMetres: Int): String {
-    val distanceInKm = distanceInMetres / 1000.0
-    distanceInKm.round(2)
-    return "$distanceInKm km"
+fun getFormattedDistance(distanceInMetres: Int?, distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS): String? {
+    if (distanceInMetres == null) return null
+    return if (distanceUnit == DistanceUnit.KILOMETERS) {
+        val distanceInKm = distanceInMetres / 1000.0
+        distanceInKm.round(2)
+        "$distanceInKm km"
+    } else "$distanceInMetres m"
 }
 
 fun getFormattedTime(timeInSeconds: Int): String {
@@ -31,6 +35,16 @@ fun getFormattedTime(timeInSeconds: Int): String {
     val hours = (timeInSeconds / 3600)
     val paddedHours = if (hours / 10 == 0) "0$hours:" else "$hours"
     return "$paddedHours$paddedMinutes$paddedSeconds"
+}
+
+fun getFormattedTime(hours: Int?, minutes: Int?, seconds: Int?): String? {
+    val sum = getTimeSum(hours, minutes, seconds) ?: return null
+    return getFormattedTime(sum)
+}
+
+fun getTimeSum(hours: Int?, minutes: Int?, seconds: Int?): Int? {
+    if (hours == null && minutes == null && seconds == null) return null
+    return (hours ?: 0) * 3600 + (minutes ?: 0) * 60 + (seconds ?: 0)
 }
 
 fun LocalDate.getCalendarWeekString(): String {
@@ -58,7 +72,7 @@ inline fun <reified K: Comparable<K>, reified V: Comparable<V>> List<TrainingSpo
             Sport::class -> it.sport
             LocalDate::class -> it.training.date
             String::class -> when (dateAggregationLevel) {
-                DateAggregationLevel.DAILY -> it.training.date.toString()
+                DateAggregationLevel.DAILY -> it.training.date.getFormattedString()
                 DateAggregationLevel.WEEKLY -> it.training.date.getCalendarWeekString()
                 DateAggregationLevel.MONTHLY -> it.training.date.getMonthString()
             }
@@ -75,7 +89,7 @@ inline fun <reified K: Comparable<K>, reified V: Comparable<V>> List<TrainingSpo
             Sport::class -> firstLevelValue.groupBy { it.sport }
             LocalDate::class -> firstLevelValue.groupBy { it.training.date }
             String::class -> when (dateAggregationLevel) {
-                DateAggregationLevel.DAILY -> firstLevelValue.groupBy { it.training.date.toString() }
+                DateAggregationLevel.DAILY -> firstLevelValue.groupBy { it.training.date.getFormattedString() }
                 DateAggregationLevel.WEEKLY -> firstLevelValue.groupBy { it.training.date.getCalendarWeekString() }
                 DateAggregationLevel.MONTHLY -> firstLevelValue.groupBy { it.training.date.getMonthString() }
             }

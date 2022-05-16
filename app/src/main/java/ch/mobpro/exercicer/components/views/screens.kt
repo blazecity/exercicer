@@ -13,8 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.views.admin.AdminNavigationController
+import ch.mobpro.exercicer.components.views.goals.GoalCard
+import ch.mobpro.exercicer.components.views.goals.GoalsPage
 import ch.mobpro.exercicer.components.views.reporting.ReportingPage
+import ch.mobpro.exercicer.data.entity.Goal
+import ch.mobpro.exercicer.viewmodel.ReportingViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
+import java.time.LocalDate
 
 enum class Route(val route: String) {
     ROUTE_TRAINING("r_training"),
@@ -48,20 +53,18 @@ fun ScreenTitle(title: String) {
 
 @Composable
 fun ScreenController(navController: NavHostController) {
-    val reportingViewModel: TrainingViewModel = hiltViewModel()
-
     NavHost(navController, startDestination = Route.ROUTE_TRAINING.route) {
 
         composable(Route.ROUTE_TRAINING.route) {
-            trainingPage(trainingViewModel = reportingViewModel)
+            TrainingPage()
         }
 
         composable(Route.ROUTE_GOAL.route) {
-            Text("Goal")
+            GoalsPage()
         }
 
         composable(Route.ROUTE_REPORTING.route) {
-            ReportingPage(reportingViewModel = reportingViewModel)
+            ReportingPage()
         }
 
         composable(Route.ROUTE_ADMIN.route) {

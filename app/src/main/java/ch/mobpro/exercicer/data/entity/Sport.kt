@@ -1,6 +1,7 @@
 package ch.mobpro.exercicer.data.entity
 
 import androidx.room.*
+import ch.mobpro.exercicer.components.Listable
 
 @Entity(
     indices = [
@@ -17,10 +18,10 @@ import androidx.room.*
 data class Sport(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "sport_id")
-    val id: Long? = null,
+    override val id: Long? = null,
     @ColumnInfo(name = "sport_name") var name: String,
     @ColumnInfo(name = "training_type_fk") var trainingTypeId: Long? = null
-): Comparable<Sport> {
+): Comparable<Sport>, Listable {
     override fun toString(): String {
         return this.name
     }

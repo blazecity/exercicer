@@ -20,8 +20,9 @@ interface GoalDao {
     @Query(
         "SELECT * " +
                 "FROM goal " +
-                "JOIN sport ON goal.sport_goal_fk = sport.sport_id " +
-                "JOIN training_type ON sport.training_type_fk = training_type.training_type_id"
+                "LEFT JOIN sport ON goal.sport_goal_fk = sport.sport_id " +
+                "LEFT JOIN training_type ON goal.training_type_goal_fk = training_type.training_type_id " +
+                "ORDER BY goal.`end` DESC"
     )
     fun getAll(): Flow<List<GoalSportTrainingTypeMapping>>
 }

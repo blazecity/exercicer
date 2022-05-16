@@ -1,12 +1,11 @@
 package ch.mobpro.exercicer
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import ch.mobpro.exercicer.data.dao.GoalDao
 import ch.mobpro.exercicer.data.dao.SportDao
 import ch.mobpro.exercicer.data.dao.TrainingDao
 import ch.mobpro.exercicer.data.dao.TrainingTypeDao
-import ch.mobpro.exercicer.data.entity.Sport
-import ch.mobpro.exercicer.data.entity.Training
-import ch.mobpro.exercicer.data.entity.TrainingType
+import ch.mobpro.exercicer.data.entity.*
 import ch.mobpro.exercicer.data.util.getCalendarWeekString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -22,6 +21,7 @@ class RoomDbTrainingTest: TestDatabase() {
     private lateinit var trainingDao: TrainingDao
     private lateinit var sportDao: SportDao
     private lateinit var trainingTypeDao: TrainingTypeDao
+    private lateinit var goalDao: GoalDao
 
     @Before
     override fun createDb() {
@@ -29,6 +29,7 @@ class RoomDbTrainingTest: TestDatabase() {
         this.trainingDao = super.db.trainingDao()
         this.sportDao = super.db.sportDao()
         this.trainingTypeDao = super.db.trainingTypeDao()
+        this.goalDao = super.db.goalDao()
     }
 
     @Test
@@ -203,5 +204,58 @@ class RoomDbTrainingTest: TestDatabase() {
     fun testGetWeekDay() {
         val date = LocalDate.of(2022, 5, 11)
         assertEquals("19/2022", date.getCalendarWeekString())
+    }
+
+    @Test
+    fun testGetTrainingsByDateAndTrainingType() = runTest {
+        // Arrange
+        val trainingType1 = TrainingType(1, "Training Type 1")
+        val trainingType2 = TrainingType(2, "Training Type 2")
+        trainingTypeDao.insert(trainingType1)
+        trainingTypeDao.insert(trainingType2)
+
+        val sport1 = Sport(3, "Sport 1", trainingType1.id!!)
+        val sport2 = Sport(4, "Sport 2", trainingType2.id!!)
+        val sport3 = Sport(5, "Sport 3", trainingType2.id)
+        sportDao.insert(sport1)
+        sportDao.insert(sport2)
+        sportDao.insert(sport3)
+
+        val training1 = Training(6,
+            LocalDate.of(2021, 4, 6), // 06/04/2021
+            sport1.id!!,
+            trainingTimeMinutes = 20,
+            trainingTimeSeconds = 20)
+
+        val training2 = Training(7,
+            LocalDate.of(2022, 2, 3), // 03/02/2022
+            sport1.id!!,
+            trainingTimeHour = 2)
+
+        val training3 = Training(8,
+            LocalDate.of(2022, 2, 4), // 04/02/2022
+            sport2.id!!,
+            trainingTimeMinutes = 34)
+
+        val training4 = Training(9,
+            LocalDate.of(2022, 3, 17), // 17/03/2022
+            sport3.id!!,
+            trainingTimeHour = 3,
+            trainingTimeSeconds = 4)
+
+        trainingDao.insert(training1)
+        trainingDao.insert(training2)
+        trainingDao.insert(training3)
+        trainingDao.insert(training4)
+
+        // Act
+        val sum = trainingDao.getTrainingTypeSumsByDate(
+            trainingType1.id!!,
+            LocalDate.of(2021, 4, 6),
+            LocalDate.of(2021, 4, 6)
+        ).first()
+
+        // Assert
+        assertEquals(1220, sum.sumSeconds)
     }
 }

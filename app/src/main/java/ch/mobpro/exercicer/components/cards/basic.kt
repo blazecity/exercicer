@@ -1,5 +1,6 @@
-package ch.mobpro.exercicer.components
+package ch.mobpro.exercicer.components.cards
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,20 +11,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ch.mobpro.exercicer.ui.theme.LightYellow
 
 
 @Composable
 fun SmallBadge(
     content: String,
     fontColor: Color = Color.Black,
-    backgroundColor: Color = Color.LightGray
+    backgroundColor: Color = LightYellow
 ) {
-    Card(backgroundColor = backgroundColor) {
+    Card(shape = RoundedCornerShape(8.dp), backgroundColor = backgroundColor) {
         Text(
             content, 
-            modifier = Modifier.padding(3.dp),
+            modifier = Modifier.padding(5.dp),
             color = fontColor,
             fontWeight = FontWeight.Bold
         )
@@ -31,9 +32,9 @@ fun SmallBadge(
 }
 
 @Composable
-fun BaseCard(content: @Composable () -> Unit) {
+fun BaseCard(onClick: () -> Unit = {}, content: @Composable () -> Unit) {
     Card(
-        modifier = Modifier.padding(vertical = 7.dp).fillMaxWidth(),
+        modifier = Modifier.padding(vertical = 7.dp).fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(CornerSize(5.dp)),
         elevation = 4.dp
     ) {

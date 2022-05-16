@@ -15,18 +15,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import ch.mobpro.exercicer.data.util.getFormattedString
+import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 import java.time.LocalDate
 
 @Composable
-fun DatePickerField(labelText: String, onValueChange: (LocalDate) -> Unit) {
+fun DatePickerField(initialDate: LocalDate = LocalDate.now(), labelText: String, onValueChange: (LocalDate) -> Unit) {
     var dateState by remember {
-        mutableStateOf(LocalDate.now())
+        mutableStateOf(initialDate)
     }
 
     val datePickerDialog = DatePickerDialog(
         LocalContext.current,
         { _, year, month, day ->
-            dateState = LocalDate.of(year, month, day)
+            dateState = LocalDate.of(year, month + 1, day)
             onValueChange(dateState)
         },
         dateState.year,

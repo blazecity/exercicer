@@ -7,6 +7,6 @@ import ch.mobpro.exercicer.data.entity.TrainingType
 
 class GoalSportTrainingTypeMapping(
     @Embedded val goal: Goal,
-    @Embedded val sport: Sport,
-    @Embedded val trainingType: TrainingType
+    @Embedded val sport: Sport?,
+    @Embedded val trainingType: TrainingType?
 )
