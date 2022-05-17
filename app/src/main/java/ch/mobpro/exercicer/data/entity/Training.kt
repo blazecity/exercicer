@@ -21,14 +21,15 @@ data class Training(
     val id: Long? = null,
     var date: LocalDate,
     @ColumnInfo(name = "sport_fk") var sportId: Long,
-    var trainingTimeHour: Int? = null,
-    var trainingTimeMinutes: Int? = null,
-    var trainingTimeSeconds: Int? = null,
-    var trainingDistanceInMeters: Int? = null,
-    var distanceUnit: DistanceUnit? = null,
-    var sets: Int? = null,
-    var repeats: Int? = null,
+    var trainingTimeHour: Int = 0,
+    var trainingTimeMinutes: Int = 0,
+    var trainingTimeSeconds: Int = 0,
+    var trainingDistanceInMeters: Int = 0,
+    var distanceUnit: DistanceUnit? = DistanceUnit.KILOMETERS,
+    var sets: Int = 0,
+    var repeats: Int = 0,
+    var weight: Float = 0f,
     var remarks: String? = null,
-    var intensity: Int? = null // soll nur bis 10 gehen
+    var intensity: Int = 0 // soll nur bis 10 gehen
 )
 

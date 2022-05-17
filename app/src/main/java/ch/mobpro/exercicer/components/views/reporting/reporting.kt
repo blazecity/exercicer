@@ -32,12 +32,9 @@ import ch.mobpro.exercicer.components.date.DatePickerField
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
-import ch.mobpro.exercicer.data.entity.mapping.SummingWrapper
+import ch.mobpro.exercicer.data.entity.mapping.ReportingData
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
-import ch.mobpro.exercicer.data.util.ReportingEntry
-import ch.mobpro.exercicer.data.util.getFormattedDistance
-import ch.mobpro.exercicer.data.util.getFormattedTime
-import ch.mobpro.exercicer.data.util.groupBy
+import ch.mobpro.exercicer.data.util.*
 import ch.mobpro.exercicer.viewmodel.ReportingViewModel
 
 @Composable
@@ -101,7 +98,7 @@ fun ReportingPage() {
 private fun groupMap(
     list: List<TrainingSportTrainingTypeMapping>,
     groupByArgs: Triple<AggregationLevel?, AggregationLevel?, DateAggregationLevel?>
-): Map<out Any, Map<out Any, SummingWrapper>>  {
+): Map<out Any, Map<out Any, ReportingData>>  {
 
     if (groupByArgs.first == null || groupByArgs.second == null || groupByArgs.third == null) {
         return mutableMapOf()
@@ -133,8 +130,8 @@ private fun groupMap(
 @Composable
 fun ReportingRow(bold: Boolean, vararg rowValues: String) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        // first row has weight of 1
-        var weight = 1f
+        // first row has weight of 0.6
+        var weight = 0.6f
         var rightAligned = false
         rowValues.forEach {
             Text(it,
@@ -142,11 +139,12 @@ fun ReportingRow(bold: Boolean, vararg rowValues: String) {
                     .fillMaxWidth()
                     .weight(weight),
                 fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-                textAlign = if (rightAligned) TextAlign.Right else TextAlign.Left
+                textAlign = if (rightAligned) TextAlign.Right else TextAlign.Left,
+                fontSize = 12.sp
             )
 
-            // following cols after first row have half weight
-            weight = 0.5f
+            // following cols after first row have weight of 0.4
+            weight = 0.4f
 
             // following cols after first are right aligned
             rightAligned = true
@@ -157,7 +155,7 @@ fun ReportingRow(bold: Boolean, vararg rowValues: String) {
 @Composable
 fun ReportingList(
     list: List<TrainingSportTrainingTypeMapping>,
-    groupList: (List<TrainingSportTrainingTypeMapping>) -> Map<out Any, Map<out Any, SummingWrapper>>
+    groupList: (List<TrainingSportTrainingTypeMapping>) -> Map<out Any, Map<out Any, ReportingData>>
 ) {
     val dataMap = groupList(list)
     LazyColumn {
@@ -166,18 +164,50 @@ fun ReportingList(
             val subMap = dataMap[key]!!
             var sumTime = 0
             var sumDistance = 0
+            var sumSets = 0
+            var averageRepeats = 0f
+            var averageWeight = 0f
             for (subKey in subMap.keys) {
                 val subValue = subMap[subKey]!!
+
+                val totalRepeatsSubValue = subValue.sumSets * subValue.averageRepeats
+                val totalRepeatsOld = sumSets * averageRepeats
+                val totalRepeats = totalRepeatsSubValue + totalRepeatsOld
+
+                val totalSetsBoth = subValue.sumSets + sumSets
+
+                val avgReps = if (totalSetsBoth == 0) 0f else totalRepeats / totalSetsBoth
+
+                val avgWeight = if (totalRepeats == 0f) 0f else (totalRepeatsSubValue * subValue.averageWeight +
+                        totalRepeatsOld * averageWeight) / totalRepeats
+
                 sumTime += subValue.sumSeconds
                 sumDistance += subValue.sumMeters
+                sumSets += subValue.sumSets
+                averageRepeats = avgReps
+                averageWeight = avgWeight
+
                 reportingEntries.add(
-                    ReportingEntry(subKey.toString(),
+                    ReportingEntry(
+                        subKey.toString(),
                         getFormattedDistance(subValue.sumMeters)!!,
-                        getFormattedTime(subValue.sumSeconds))
+                        getFormattedTime(subValue.sumSeconds),
+                        getFormattedSet(subValue.sumSets),
+                        getFormattedRepeats(subValue.averageRepeats),
+                        getFormattedWeight(subValue.averageWeight)
+                    )
                 )
             }
             this.item {
-                ReportingCard(key.toString(), reportingEntries, sumDistance, sumTime)
+                ReportingCard(
+                    key.toString(),
+                    reportingEntries,
+                    sumDistance,
+                    sumTime,
+                    sumSets,
+                    averageRepeats,
+                    averageWeight
+                )
             }
         }
     }
@@ -185,11 +215,36 @@ fun ReportingList(
 
 
 @Composable
-fun ReportingCard(title: String, reportingEntries: List<ReportingEntry>, sumDistance: Int, sumTime: Int) {
+fun ReportingCard(
+    title: String,
+    reportingEntries: List<ReportingEntry>,
+    sumDistance: Int,
+    sumTime: Int,
+    sumSets: Int,
+    averageRepeats: Float,
+    averageWeight: Float,
+) {
     BaseCard {
-        ReportingRow(true, title, getFormattedDistance(sumDistance)!!, getFormattedTime(sumTime))
+        ReportingRow(
+            true,
+            title,
+            getFormattedDistance(sumDistance)!!,
+            getFormattedTime(sumTime),
+            getFormattedSet(sumSets),
+            getFormattedRepeats(averageRepeats),
+            getFormattedWeight(averageWeight)
+        )
+
         reportingEntries.forEach {
-            ReportingRow(false, it.description, it.formattedDistance, it.formattedTime)
+            ReportingRow(
+                false,
+                it.description,
+                it.formattedDistance,
+                it.formattedTime,
+                it.sets,
+                it.repeats,
+                it.weight
+            )
         }
     }
 }

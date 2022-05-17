@@ -256,6 +256,6 @@ class RoomDbTrainingTest: TestDatabase() {
         ).first()
 
         // Assert
-        assertEquals(1220, sum.sumSeconds)
+        assertEquals(1220, sum.sumTime)
     }
 }

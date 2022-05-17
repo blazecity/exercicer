@@ -6,7 +6,8 @@ import java.time.LocalDate
 
 @Entity(
     indices = [
-        Index(value = ["sport_goal_fk"])
+        Index(value = ["sport_goal_fk"]),
+        Index(value = ["training_type_goal_fk"])
     ],
     foreignKeys = [
         ForeignKey(
@@ -29,9 +30,11 @@ data class Goal(
     @ColumnInfo(name = "training_type_goal_fk") var trainingTypeId: Long? = null,
     var start: LocalDate = LocalDate.now(),
     var end: LocalDate = LocalDate.now(),
-    var trainingTimeGoalHours: Int? = null,
-    var trainingTimeGoalMinutes: Int? = null,
-    var trainingTimeGoalSeconds: Int? = null,
-    var distanceGoalInMetres: Int? = null,
-    var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS
+    var trainingTimeGoalHours: Int = 0,
+    var trainingTimeGoalMinutes: Int = 0,
+    var trainingTimeGoalSeconds: Int = 0,
+    var distanceGoalInMetres: Int = 0,
+    var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
+    var numberOfTimesGoal: Int = 0,
+    var weightGoal: Float = 0f
 ): Listable

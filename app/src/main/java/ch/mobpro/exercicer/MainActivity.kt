@@ -56,12 +56,21 @@ class MainActivity : ComponentActivity() {
             LocalDate.of(2021, 4, 6), // 06/04/2021
             sport1.id!!,
             trainingTimeMinutes = 20,
-            trainingTimeSeconds = 20)
+            trainingTimeSeconds = 20,
+            trainingDistanceInMeters = 10,
+            sets = 2,
+            repeats = 12,
+            weight = 20f
+        )
 
         val training2 = Training(7,
             LocalDate.of(2022, 2, 3), // 03/02/2022
             sport1.id,
-            trainingTimeHour = 2)
+            trainingTimeHour = 2,
+            sets = 3,
+            repeats = 12,
+            weight = 40f
+        )
 
         val training3 = Training(8,
             LocalDate.of(2022, 2, 4), // 04/02/2022
@@ -85,7 +94,9 @@ class MainActivity : ComponentActivity() {
             sportId = sport1.id,
             distanceGoalInMetres = 1000,
             distanceUnit = DistanceUnit.KILOMETERS,
-            trainingTimeGoalHours = 3
+            trainingTimeGoalHours = 3,
+            numberOfTimesGoal = 2,
+            weightGoal = 41.5f
         )
 
         val goal2 = Goal(

@@ -1,15 +1,18 @@
 package ch.mobpro.exercicer.data.util
 
 
+import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.toLowerCase
 import ch.mobpro.exercicer.data.entity.DistanceUnit
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.DateAggregationLevel
-import ch.mobpro.exercicer.data.entity.mapping.SummingWrapper
+import ch.mobpro.exercicer.data.entity.mapping.ReportingData
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.WeekFields
+import java.util.*
 
 
 fun Double.round(decimals: Int): Double {
@@ -32,19 +35,34 @@ fun getFormattedTime(timeInSeconds: Int): String {
     val paddedSeconds = if (seconds / 10 == 0) "0$seconds" else "$seconds"
     val minutes = (timeInSeconds / 60) % 60
     val paddedMinutes = if (minutes / 10 == 0) "0$minutes:" else "$minutes:"
-    val hours = (timeInSeconds / 3600)
-    val paddedHours = if (hours / 10 == 0) "0$hours:" else "$hours"
+    val hours = (timeInSeconds / 3600) % 3600
+    val paddedHours = if (hours / 10 == 0) "0$hours:" else "$hours:"
     return "$paddedHours$paddedMinutes$paddedSeconds"
 }
 
-fun getFormattedTime(hours: Int?, minutes: Int?, seconds: Int?): String? {
-    val sum = getTimeSum(hours, minutes, seconds) ?: return null
+fun getFormattedSet(sets: Int): String {
+    return "$sets sts"
+}
+
+fun getFormattedRepeats(repeats: Float): String {
+    return "$repeats rep"
+}
+
+fun getFormattedWeight(weight: Float): String {
+    return "$weight kg"
+}
+
+fun getFormattedTime(hours: Int, minutes: Int, seconds: Int): String {
+    val sum = getTimeSum(hours, minutes, seconds)
     return getFormattedTime(sum)
 }
 
-fun getTimeSum(hours: Int?, minutes: Int?, seconds: Int?): Int? {
-    if (hours == null && minutes == null && seconds == null) return null
-    return (hours ?: 0) * 3600 + (minutes ?: 0) * 60 + (seconds ?: 0)
+fun getFormattedTimes(times: Int): String {
+    return "$times x"
+}
+
+fun getTimeSum(hours: Int, minutes: Int, seconds: Int): Int {
+    return hours * 3600 + minutes * 60 + seconds
 }
 
 fun LocalDate.getCalendarWeekString(): String {
@@ -54,7 +72,7 @@ fun LocalDate.getCalendarWeekString(): String {
 }
 
 fun LocalDate.getMonthString(): String {
-    val month = this.month
+    val month = this.month.toString().lowercase().replaceFirstChar { it.uppercase() }
     val year = this.year
     return "$month/$year"
 }
@@ -63,9 +81,9 @@ fun LocalDate.getFormattedString(): String = this.format(DateTimeFormatter.ofPat
 
 inline fun <reified K: Comparable<K>, reified V: Comparable<V>> List<TrainingSportTrainingTypeMapping>.groupBy(
     dateAggregationLevel: DateAggregationLevel = DateAggregationLevel.DAILY
-): Map<K, Map<V, SummingWrapper>> {
+): Map<K, Map<V, ReportingData>> {
 
-    val resultMap = mutableMapOf<K, Map<V, SummingWrapper>>()
+    val resultMap = mutableMapOf<K, Map<V, ReportingData>>()
     var firstLevelMap = this.groupBy {
         when (K::class) {
             TrainingType::class -> it.trainingType
@@ -100,7 +118,7 @@ inline fun <reified K: Comparable<K>, reified V: Comparable<V>> List<TrainingSpo
 
         for (secondLevelKey in secondLevelMap.keys) {
             val trainingList = secondLevelMap[secondLevelKey]!!
-            val aggregate: SummingWrapper = trainingList.fold(SummingWrapper()) { leftSummingWrapper, rightMappingObject ->
+            val aggregate: ReportingData = trainingList.fold(ReportingData()) { leftSummingWrapper, rightMappingObject ->
                 leftSummingWrapper + rightMappingObject
             }
             var aggregateMap = resultMap.getOrPut(firstLevelKey) { mutableMapOf() }.toMutableMap()

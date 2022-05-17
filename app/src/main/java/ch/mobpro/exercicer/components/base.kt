@@ -31,7 +31,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -95,9 +94,44 @@ fun LabeledText(content: String, label: String) {
 }
 
 @Composable
-fun LabeledSwitch(label: String, onCheckedChange: (Boolean) -> Unit) {
+fun SideLabeledSwitch(
+    initialState: Boolean,
+    labelLeft: String,
+    labelRight: String,
+    onCheckedChange: (Boolean) -> Unit
+) {
     var isChecked by remember {
-        mutableStateOf(false)
+        mutableStateOf(initialState)
+    }
+
+    Row(modifier = Modifier.padding(top = 15.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            labelLeft,
+            color = Color.Gray,
+            fontSize = 11.sp
+        )
+
+        Switch(
+            checked = isChecked,
+            onCheckedChange = {
+                onCheckedChange(it)
+                isChecked = it
+            }
+        )
+
+        Text(
+            labelRight,
+            color = Color.Gray,
+            fontSize = 11.sp
+        )
+
+    }
+}
+
+@Composable
+fun LabeledSwitch(initialState: Boolean, label: String, onCheckedChange: (Boolean) -> Unit) {
+    var isChecked by remember {
+        mutableStateOf(initialState)
     }
 
     Column(modifier = Modifier.padding(top = 15.dp)) {
@@ -444,7 +478,7 @@ fun DistancePicker(
     }
 
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
-        IntegerInput(label = "Distanz", initialValue = distance) {
+        NumberInput(label = "Distanz", initialValue = distance) {
             distance = it
             onChange(distance, distanceUnit)
         }
@@ -480,7 +514,7 @@ fun SecondsTimePicker(
     }
 
     Row(horizontalArrangement = Arrangement.SpaceBetween) {
-        IntegerInput(
+        NumberInput(
             modifier = Modifier.weight(1f),
             label = "Stunden",
             initialValue = timeHours,
@@ -490,7 +524,7 @@ fun SecondsTimePicker(
             }
         )
 
-        IntegerInput(
+        NumberInput(
             modifier = Modifier.weight(1f),
             label = "Minuten",
             initialValue = timeMinutes,
@@ -500,7 +534,7 @@ fun SecondsTimePicker(
             }
         )
 
-        IntegerInput(
+        NumberInput(
             modifier = Modifier.weight(1f),
             label = "Sekunden",
             initialValue = timeSeconds,
@@ -513,9 +547,18 @@ fun SecondsTimePicker(
 }
 
 @Composable
-fun IntegerInput(modifier: Modifier = Modifier, label: String, initialValue: Int, onValueChange: (Int) -> Unit) {
+inline fun <reified T: Number> NumberInput(
+    modifier: Modifier = Modifier,
+    label: String,
+    initialValue: T,
+    crossinline onValueChange: (T) -> Unit
+) {
     var value by remember {
         mutableStateOf(initialValue)
+    }
+
+    var isError by remember {
+        mutableStateOf(false)
     }
 
     OutlinedTextField(
@@ -523,11 +566,22 @@ fun IntegerInput(modifier: Modifier = Modifier, label: String, initialValue: Int
         textStyle = TextStyle(textAlign = TextAlign.Right),
         label = { Text(label) },
         value = value.toString(),
+        isError = isError,
         onValueChange = {
-                        value = it.toInt()
-                        onValueChange(value)
+            if (it.isEmpty()) {
+                isError = true
+            } else {
+                isError = false
+                when (T::class) {
+                    Float::class -> value = it.toFloat() as T
+                    Int::class -> value = it.toInt() as T
+                }
+                onValueChange(value)
+            }
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
 }
+
+
 

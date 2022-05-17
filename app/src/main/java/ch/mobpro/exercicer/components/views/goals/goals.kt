@@ -1,8 +1,11 @@
 package ch.mobpro.exercicer.components.views.goals
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
@@ -13,8 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ch.mobpro.exercicer.components.*
 import ch.mobpro.exercicer.components.cards.BaseCard
@@ -25,14 +30,11 @@ import ch.mobpro.exercicer.data.entity.Goal
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.GoalSportTrainingTypeMapping
-import ch.mobpro.exercicer.data.util.getFormattedDistance
-import ch.mobpro.exercicer.data.util.getFormattedString
-import ch.mobpro.exercicer.data.util.getFormattedTime
-import ch.mobpro.exercicer.data.util.getTimeSum
+import ch.mobpro.exercicer.data.util.*
 import ch.mobpro.exercicer.viewmodel.AchievementViewModel
 import ch.mobpro.exercicer.viewmodel.GoalViewModel
 import ch.mobpro.exercicer.viewmodel.SportViewModel
-import java.time.LocalDate
+import kotlin.math.min
 
 @Composable
 fun GoalsPage() {
@@ -42,6 +44,8 @@ fun GoalsPage() {
     var showDialog by remember {
         mutableStateOf(false)
     }
+
+    val context = LocalContext.current
 
     Scaffold(
         floatingActionButton = {
@@ -65,33 +69,15 @@ fun GoalsPage() {
                     goal = editableGoal,
                     sportViewModel = sportViewModel,
                     visibilityChange = {visibility -> showDialog = visibility}
-                ) {
-                    goalViewModel.insert(editableGoal)
-                    showDialog = false
-                    editableGoal = Goal()
+                ) { validationSuccessful, validationMessage ->
+                    if (!validationSuccessful) {
+                        Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
+                    } else {
+                        goalViewModel.insert(editableGoal)
+                        showDialog = false
+                        editableGoal = Goal()
+                    }
                 }
-
-//                FullScreenDialog(
-//                    title = "Neues Ziel",
-//                    visible = showDialog,
-//                    onClose = { showDialog = false },
-//                    onSave = {
-//                        goalViewModel.insert(editableGoal)
-//                        showDialog = false
-//                        editableGoal = Goal()
-//                    }
-//                ) {
-//                    val sportMap = sportViewModel.sportMap.collectAsState().value
-//                    val sports = sportMap.keys
-//                    val trainingTypes = sportMap.values.toSet()
-//                    GoalDialog(
-//                        editableGoal,
-//                        sports.find { it.id == editableGoal.sportId } ?: sports.first(),
-//                        sportMap.keys.toList(),
-//                        sportMap.values.find { it.id == editableGoal.trainingTypeId } ?: trainingTypes.first(),
-//                        trainingTypes.toList()
-//                    )
-//                }
             }
         }
     }
@@ -106,6 +92,8 @@ fun GoalCard(
 ) {
     val goal = goalMapping.goal
     val isSport = goalMapping.sport != null
+
+    val context = LocalContext.current
 
     var showDialog by remember {
         mutableStateOf(false)
@@ -125,69 +113,69 @@ fun GoalCard(
             else achievementViewModel.getTrainingTypeSumsByDate(goal.trainingTypeId!!, goal.start, goal.end)
             mutableStateOf(flow)
         }
-        val sumSeconds = sum.observeAsState().value?.sumSeconds ?: 0
-        val sumDistance = sum.observeAsState().value?.sumMeters ?: 0
+        val sumSeconds = sum.observeAsState().value?.sumTime ?: 0
+        val sumDistance = sum.observeAsState().value?.sumDistance ?: 0
+        val sumTimes = sum.observeAsState().value?.sumTimes ?: 0
+        val maxWeight = sum.observeAsState().value?.maxWeight ?: 0f
 
-        if (goal.distanceGoalInMetres != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    modifier = Modifier
-                        .padding(end = 5.dp)
-                        .weight(1f),
-                    text = getFormattedDistance(sumDistance, goal.distanceUnit)!!,
-                    textAlign = TextAlign.Left
-                )
-                StatusBar(Modifier.weight(3f), sumDistance.toFloat(), goal.distanceGoalInMetres?.toFloat() ?: 0f)
-                Text(
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                        .weight(1f),
-                    text = getFormattedDistance(goal.distanceGoalInMetres, goal.distanceUnit)!!,
-                    textAlign = TextAlign.Right
-                )
-            }
+        // distance goal
+        if (goal.distanceGoalInMetres != 0) {
+            GoalStatusBar(
+                goalLabel = "Distanz",
+                targetText = getFormattedDistance(goal.distanceGoalInMetres, goal.distanceUnit)!!,
+                target = goal.distanceGoalInMetres.toFloat(),
+                effectiveText = getFormattedDistance(sumDistance, goal.distanceUnit)!!,
+                effective = sumDistance.toFloat()
+            )
         }
-        val hasTimeGoal = goal.trainingTimeGoalHours != null ||
-                goal.trainingTimeGoalMinutes != null ||
-                goal.trainingTimeGoalSeconds != null
+
+        // time goal
+        val hasTimeGoal = goal.trainingTimeGoalHours != 0 ||
+                goal.trainingTimeGoalMinutes != 0 ||
+                goal.trainingTimeGoalSeconds != 0
 
         if (hasTimeGoal) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val target = getTimeSum(
+            val target = getTimeSum(
+                goal.trainingTimeGoalHours,
+                goal.trainingTimeGoalMinutes,
+                goal.trainingTimeGoalSeconds
+            ).toFloat()
+
+            GoalStatusBar(
+                goalLabel = "Zeit",
+                targetText = getFormattedTime(
                     goal.trainingTimeGoalHours,
                     goal.trainingTimeGoalMinutes,
-                    goal.trainingTimeGoalSeconds
-                )?.toFloat() ?: 0f
-
-                Text(
-                    modifier = Modifier
-                        .padding(end = 5.dp)
-                        .weight(1f),
-                    text = getFormattedTime(sumSeconds),
-                    textAlign = TextAlign.Left
-                )
-                StatusBar(Modifier.weight(3f), sumSeconds.toFloat(), target)
-                Text(
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                        .weight(1f),
-                    text = getFormattedTime(
-                        goal.trainingTimeGoalHours,
-                        goal.trainingTimeGoalMinutes,
-                        goal.trainingTimeGoalMinutes
-                    )!!,
-                    textAlign = TextAlign.Right
-                )
-            }
+                    goal.trainingTimeGoalMinutes
+                ),
+                target = target,
+                effectiveText = getFormattedTime(sumSeconds),
+                effective = sumSeconds.toFloat()
+            )
         }
+
+        // times goal
+        if (goal.numberOfTimesGoal != 0) {
+            GoalStatusBar(
+                goalLabel = "Anzahl",
+                targetText = getFormattedTimes(goal.numberOfTimesGoal),
+                target = goal.numberOfTimesGoal.toFloat(),
+                effectiveText = getFormattedTimes(sumTimes),
+                effective = sumTimes.toFloat()
+            )
+        }
+
+        // weight goal
+        if (goal.weightGoal != 0f) {
+            GoalStatusBar(
+                goalLabel = "Gewicht",
+                targetText = getFormattedWeight(goal.weightGoal),
+                target = goal.weightGoal,
+                effectiveText = getFormattedWeight(maxWeight),
+                effective = maxWeight
+            )
+        }
+
     }
 
     if (showDialog) {
@@ -196,10 +184,57 @@ fun GoalCard(
             goal = goal,
             sportViewModel = sportViewModel,
             visibilityChange = { visibility -> showDialog = visibility }
-        ) {
-            goalViewModel.update(goal)
-            showDialog = false
+        ) { validationSuccessful, validationMessage ->
+            if (!validationSuccessful) {
+                Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
+            } else {
+                goalViewModel.update(goal)
+                showDialog = false
+            }
         }
+    }
+}
+
+@Composable
+fun GoalStatusBar(
+    goalLabel: String,
+    targetText: String,
+    target: Float,
+    effectiveText: String,
+    effective: Float
+) {
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = goalLabel,
+            modifier = Modifier
+                .padding(end = 5.dp)
+                .weight(0.5f),
+            textAlign = TextAlign.Left,
+            fontSize = 10.sp
+        )
+
+        Text(
+            modifier = Modifier
+                .padding(end = 5.dp)
+                .weight(1f),
+            text = effectiveText,
+            textAlign = TextAlign.Left
+        )
+
+        StatusBar(Modifier.weight(2f), effective, target)
+
+        Text(
+            modifier = Modifier
+                .padding(start = 5.dp)
+                .weight(1f),
+            text = targetText,
+            textAlign = TextAlign.Right
+        )
     }
 }
 
@@ -230,60 +265,151 @@ fun FullScreenGoalDialog(
     goal: Goal,
     sportViewModel: SportViewModel,
     visibilityChange: (Boolean) -> Unit,
-    onSave: () -> Unit
+    onSave: (Boolean, String) -> Unit
 ) {
+    var validationSuccessful by remember {
+        mutableStateOf(false)
+    }
+
+    var validationMessage by remember {
+        mutableStateOf("Mindestens ein Ziel muss erfasst sein.")
+    }
 
     FullScreenDialog(
         title = title,
         visible = true,
         onClose = { visibilityChange(false) },
-        onSave = onSave
+        onSave = {
+            onSave(validationSuccessful, validationMessage)
+        }
     ) {
         val sportMap = sportViewModel.sportMap.collectAsState().value
-        val sports = sportMap.keys
-        val trainingTypes = sportMap.values.toSet()
+        val sports = sportMap.keys.toList()
+        val trainingTypes = sportMap.values.toSet().toList()
+
+        if (goal.sportId == null && goal.trainingTypeId == null) {
+            goal.sportId = sports.first().id
+        }
+
         GoalDialog(
             goal,
-            sports.find { it.id == goal.sportId } ?: sports.first(),
-            sportMap.keys.toList(),
-            sportMap.values.find { it.id == goal.trainingTypeId } ?: trainingTypes.first(),
-            trainingTypes.toList()
-        )
+            sports,
+            trainingTypes
+        ) { valSuccess, valMessage ->
+            validationSuccessful = valSuccess
+            validationMessage = valMessage
+        }
     }
+}
+
+private fun validateAll(
+    hasTimeGoal: Boolean,
+    hasDistanceGoal: Boolean,
+    hasTimesGoal: Boolean,
+    hasWeightGoal: Boolean,
+    hours: Int,
+    minutes: Int,
+    seconds: Int,
+    distance: Int,
+    times: Int,
+    weight: Float,
+    validate: (Boolean, String) -> Unit
+) {
+    if (hasTimeGoal) if (!validateTime(hours, minutes, seconds, validate)) return
+    if (hasDistanceGoal) if (!validateDistance(distance, validate)) return
+    if (hasTimesGoal) if (!validateTimes(times, validate)) return
+    if (hasWeightGoal) if (!validateWeight(weight, validate)) return
+    if (!validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, validate)) return
 }
 
 @Composable
 fun GoalDialog(
     goal: Goal,
-    sport: Sport?,
     sportList: List<Sport>,
-    trainingType: TrainingType?,
-    trainingTypeList: List<TrainingType>
+    trainingTypeList: List<TrainingType>,
+    validate: (Boolean, String) -> Unit
 ) {
     val start by remember {
-        mutableStateOf(LocalDate.now())
+        mutableStateOf(goal.start)
     }
 
     val end by remember {
-        mutableStateOf(LocalDate.now())
+        mutableStateOf(goal.end)
     }
 
     var isTrainingTypeGoal by remember {
-        mutableStateOf(false)
+        mutableStateOf(goal.trainingTypeId != null)
+    }
+
+    var selectedTrainingType by remember {
+        mutableStateOf(trainingTypeList.find { it.id == goal.trainingTypeId } ?: trainingTypeList.first())
+    }
+
+    var selectedSport by remember {
+        mutableStateOf(sportList.find { it.id == goal.sportId } ?: sportList.first())
     }
 
     var hasTimeGoal by remember {
-        mutableStateOf(false)
+        mutableStateOf(goal.trainingTimeGoalHours != 0 || goal.trainingTimeGoalMinutes != 0 || goal.trainingTimeGoalSeconds != 0)
+    }
+
+    var hourTimeGoal by remember {
+        mutableStateOf(goal.trainingTimeGoalHours)
+    }
+
+    var minutesTimeGoal by remember {
+        mutableStateOf(goal.trainingTimeGoalMinutes)
+    }
+
+    var secondsTimeGoal by remember {
+        mutableStateOf(goal.trainingTimeGoalSeconds)
     }
 
     var hasDistanceGoal by remember {
-        mutableStateOf(false)
+        mutableStateOf(goal.distanceGoalInMetres != 0)
     }
 
-    goal.sportId = sport?.id
-    goal.trainingTypeId = trainingType?.id
+    var distanceGoal by remember {
+        mutableStateOf(goal.distanceGoalInMetres)
+    }
 
-    Column {
+    var currentDistanceUnit by remember {
+        mutableStateOf(goal.distanceUnit)
+    }
+
+    var hasTimesGoal by remember {
+        mutableStateOf(goal.numberOfTimesGoal != 0)
+    }
+
+    var timesGoal by remember {
+        mutableStateOf(goal.numberOfTimesGoal)
+    }
+
+    var hasWeightGoal by remember {
+        mutableStateOf(goal.weightGoal != 0f)
+    }
+
+    var weightGoal by remember {
+        mutableStateOf(goal.weightGoal)
+    }
+
+    val validateAll = {
+        validateAll(
+            hasTimeGoal,
+            hasDistanceGoal,
+            hasTimesGoal,
+            hasWeightGoal,
+            hourTimeGoal,
+            minutesTimeGoal,
+            secondsTimeGoal,
+            distanceGoal,
+            timesGoal,
+            weightGoal,
+            validate
+        )
+    }
+
+    Column(Modifier.verticalScroll(rememberScrollState())) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             Column(modifier = Modifier
                 .fillMaxWidth()
@@ -304,10 +430,20 @@ fun GoalDialog(
             }
         }
 
-        LabeledSwitch(
-            label = "Trainingsart",
+        // what does the goal apply to?
+        SideLabeledSwitch(
+            initialState = isTrainingTypeGoal,
+            labelLeft = "Sportart",
+            labelRight = "Trainingsart",
             onCheckedChange = {
                 isTrainingTypeGoal = it
+                if (isTrainingTypeGoal) {
+                    goal.sportId = null
+                    goal.trainingTypeId = selectedTrainingType.id
+                } else {
+                    goal.trainingTypeId = null
+                    goal.sportId = selectedSport.id
+                }
             }
         )
 
@@ -315,9 +451,11 @@ fun GoalDialog(
             Dropdown(
                 title = "Trainingsart",
                 list = trainingTypeList,
-                selectedItem = trainingType
+                selectedItem = selectedTrainingType
             ) {
-                goal.trainingTypeId = (it as TrainingType).id
+                val newTrainingType = it as TrainingType
+                selectedTrainingType = newTrainingType
+                goal.trainingTypeId = selectedTrainingType.id
             }
         }
 
@@ -325,41 +463,125 @@ fun GoalDialog(
             Dropdown(
                 title = "Sportart",
                 list = sportList,
-                selectedItem = sport
+                selectedItem = selectedSport
             ) {
-                goal.trainingTypeId = (it as TrainingType).id
+                val newSport = it as Sport
+                selectedSport = newSport
+                goal.sportId = selectedSport.id
             }
         }
 
+        // time goal
         LabeledSwitch(
+            initialState = hasTimeGoal,
             label = "Zeitziel",
             onCheckedChange = {
                 hasTimeGoal = it
+                if (!hasTimeGoal) {
+                    goal.trainingTimeGoalHours = 0
+                    goal.trainingTimeGoalMinutes = 0
+                    goal.trainingTimeGoalSeconds = 0
+                } else {
+                    goal.trainingTimeGoalHours = hourTimeGoal
+                    goal.trainingTimeGoalMinutes = minutesTimeGoal
+                    goal.trainingTimeGoalSeconds = secondsTimeGoal
+                }
+                validateAll()
             }
         )
 
         if (hasTimeGoal) {
-            SecondsTimePicker { hours, minutes, seconds ->
-                goal.trainingTimeGoalHours = hours
-                goal.trainingTimeGoalMinutes = minutes
-                goal.trainingTimeGoalSeconds = seconds
+            SecondsTimePicker(hourTimeGoal, minutesTimeGoal, secondsTimeGoal) { hours, minutes, seconds ->
+                hourTimeGoal = hours
+                minutesTimeGoal = minutes
+                secondsTimeGoal = seconds
+                goal.trainingTimeGoalHours = hourTimeGoal
+                goal.trainingTimeGoalMinutes = minutesTimeGoal
+                goal.trainingTimeGoalSeconds = secondsTimeGoal
+
+                validateAll()
             }
         }
 
+        // distance goal
         LabeledSwitch(
+            initialState = hasDistanceGoal,
             label = "Distanzziel",
             onCheckedChange = {
                 hasDistanceGoal = it
+                if (!hasDistanceGoal) {
+                    goal.distanceGoalInMetres = 0
+                } else {
+                    goal.distanceGoalInMetres = distanceGoal
+                }
+                validateAll()
             }
         )
 
         if (hasDistanceGoal) {
-            val distance = (goal.distanceGoalInMetres ?: 0) / goal.distanceUnit.multiplicator
+            val distance = distanceGoal / currentDistanceUnit.multiplicator
 
             DistancePicker(distance, goal.distanceUnit) { dist, distUnit ->
-                goal.distanceGoalInMetres = dist * distUnit.multiplicator
-                goal.distanceUnit = distUnit
+                distanceGoal = dist * distUnit.multiplicator
+                currentDistanceUnit = distUnit
+
+                goal.distanceGoalInMetres = distanceGoal
+                goal.distanceUnit = currentDistanceUnit
+
+                validateAll()
             }
+        }
+
+        // times goal
+        LabeledSwitch(
+            initialState = hasTimesGoal,
+            label = "Ziele Anzahl Male",
+            onCheckedChange = {
+                hasTimesGoal = it
+                if (!hasTimesGoal) {
+                    goal.numberOfTimesGoal = 0
+                } else {
+                    goal.numberOfTimesGoal = timesGoal
+                }
+                validateAll()
+            }
+        )
+
+        if (hasTimesGoal) {
+            NumberInput(
+                label = "Anzahl Male",
+                initialValue = timesGoal,
+                onValueChange = {
+                    timesGoal = it
+                    goal.numberOfTimesGoal = timesGoal
+                    validateAll()
+                })
+        }
+
+        // weight goal
+        LabeledSwitch(
+            initialState = hasWeightGoal,
+            label = "Ziel Trainingsgewicht",
+            onCheckedChange = {
+                hasWeightGoal = it
+                if (!hasWeightGoal) {
+                    goal.weightGoal = 0f
+                } else {
+                    goal.weightGoal = weightGoal
+                }
+                validateAll()
+            }
+        )
+
+        if (hasWeightGoal) {
+            NumberInput(
+                label = "Gewicht",
+                initialValue = weightGoal,
+                onValueChange = {
+                    weightGoal = it
+                    goal.weightGoal = it
+                    validateAll()
+                })
         }
     }
 }

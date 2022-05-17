@@ -2,12 +2,8 @@ package ch.mobpro.exercicer.data.repository
 
 import ch.mobpro.exercicer.data.dao.TrainingDao
 import ch.mobpro.exercicer.data.entity.Training
-import ch.mobpro.exercicer.data.entity.mapping.SummingWrapper
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.flowOn
 import java.time.LocalDate
 import javax.inject.Inject
 

@@ -1,13 +1,13 @@
 package ch.mobpro.exercicer.data.entity.mapping
 
-data class SummingWrapper(
+data class ReportingData(
     val sumSeconds: Int = 0,
     val sumMeters: Int = 0,
     val sumSets: Int = 0,
     val averageRepeats: Float = 0f,
     val averageWeight: Float = 0f
 ) {
-    operator fun plus(addition: SummingWrapper): SummingWrapper {
+    operator fun plus(addition: ReportingData): ReportingData {
         val sumSets = this.sumSets + addition.sumSets
         val sumRepeats = this.averageRepeats * this.sumSets + addition.averageRepeats * addition.sumSets
         val averageRepeats = if (sumSets == 0) 0f else sumRepeats / sumSets
@@ -15,7 +15,7 @@ data class SummingWrapper(
                 addition.averageWeight * addition.averageRepeats * addition.sumSets) /
                 (sumRepeats)
 
-        return SummingWrapper(
+        return ReportingData(
             this.sumSeconds + addition.sumSeconds,
             this.sumMeters + addition.sumMeters,
             sumSets,
@@ -24,7 +24,7 @@ data class SummingWrapper(
         )
     }
 
-    operator fun plus(addition: TrainingSportTrainingTypeMapping): SummingWrapper {
+    operator fun plus(addition: TrainingSportTrainingTypeMapping): ReportingData {
         val trainingTime = (addition.training.trainingTimeHour * 60 * 60) +
                 (addition.training.trainingTimeMinutes * 60) +
                 addition.training.trainingTimeSeconds
@@ -36,7 +36,7 @@ data class SummingWrapper(
                 addition.training.weight * addition.training.repeats * addition.training.sets) /
                 sumRepeats
 
-        return SummingWrapper(
+        return ReportingData(
             this.sumSeconds + trainingTime,
             this.sumMeters + addition.training.trainingDistanceInMeters,
             sumSets,
