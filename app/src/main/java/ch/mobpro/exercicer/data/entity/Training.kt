@@ -29,7 +29,7 @@ data class Training(
     var sets: Int = 0,
     var repeats: Int = 0,
     var weight: Float = 0f,
-    var remarks: String? = null,
-    var intensity: Int = 0 // soll nur bis 10 gehen
+    var intensity: Int = 0,  // soll nur bis 10 gehen
+    var comment: String? = null
 )
 
