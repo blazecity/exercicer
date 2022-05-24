@@ -435,7 +435,11 @@ fun Dropdown(
         mutableStateOf(selectedItem)
     }
 
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {expanded = !expanded}, modifier = Modifier.fillMaxWidth()) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = {expanded = !expanded},
+        modifier = Modifier.fillMaxWidth()
+    ) {
         OutlinedTextField(
             selectedOption.toString(),
             modifier = Modifier.fillMaxWidth(),

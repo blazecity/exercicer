@@ -288,7 +288,7 @@ fun FullScreenGoalDialog(
         val trainingTypes = sportMap.values.toSet().toList()
 
         if (goal.sportId == null && goal.trainingTypeId == null) {
-            goal.sportId = sports.first().id
+            goal.sportId = sports.firstOrNull()?.id ?: -1
         }
 
         GoalDialog(
@@ -303,6 +303,9 @@ fun FullScreenGoalDialog(
 }
 
 private fun validateAll(
+    isTrainingTypeGoal: Boolean,
+    selectedSport: Sport,
+    selectedTrainingType: TrainingType,
     hasTimeGoal: Boolean,
     hasDistanceGoal: Boolean,
     hasTimesGoal: Boolean,
@@ -315,6 +318,8 @@ private fun validateAll(
     weight: Float,
     validate: (Boolean, String) -> Unit
 ) {
+    if (isTrainingTypeGoal) if (!validateTrainingType(selectedTrainingType, validate)) return
+    if (!isTrainingTypeGoal) if (!validateSport(selectedSport, validate)) return
     if (hasTimeGoal) if (!validateTime(hours, minutes, seconds, validate)) return
     if (hasDistanceGoal) if (!validateDistance(distance, validate)) return
     if (hasTimesGoal) if (!validateTimes(times, validate)) return
@@ -342,11 +347,15 @@ fun GoalDialog(
     }
 
     var selectedTrainingType by remember {
-        mutableStateOf(trainingTypeList.find { it.id == goal.trainingTypeId } ?: trainingTypeList.first())
+        mutableStateOf(trainingTypeList.find {
+            it.id == goal.trainingTypeId
+        } ?: trainingTypeList.firstOrNull() ?: TrainingType(name = ""))
     }
 
     var selectedSport by remember {
-        mutableStateOf(sportList.find { it.id == goal.sportId } ?: sportList.first())
+        mutableStateOf(sportList.find {
+            it.id == goal.sportId
+        } ?: sportList.firstOrNull() ?: Sport(name = ""))
     }
 
     var hasTimeGoal by remember {
@@ -395,6 +404,9 @@ fun GoalDialog(
 
     val validateAll = {
         validateAll(
+            isTrainingTypeGoal,
+            selectedSport,
+            selectedTrainingType,
             hasTimeGoal,
             hasDistanceGoal,
             hasTimesGoal,
@@ -444,6 +456,8 @@ fun GoalDialog(
                     goal.trainingTypeId = null
                     goal.sportId = selectedSport.id
                 }
+
+                validateAll()
             }
         )
 

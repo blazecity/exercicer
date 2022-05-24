@@ -1,5 +1,8 @@
 package ch.mobpro.exercicer.components
 
+import ch.mobpro.exercicer.data.entity.Sport
+import ch.mobpro.exercicer.data.entity.TrainingType
+
 fun validateTime(
     hours: Int,
     minutes: Int,
@@ -54,6 +57,24 @@ fun validateWeight(weight: Float, validate: (Boolean, String) -> Unit): Boolean 
     val validationResult = weight != 0f
     if (!validationResult) {
         validate(validationResult, "Das Gewicht darf nicht 0 sein.")
+    } else validate(validationResult, "")
+
+    return validationResult
+}
+
+fun validateTrainingType(trainingType: TrainingType, validate: (Boolean, String) -> Unit): Boolean {
+    val validationResult = trainingType.id != null
+    if (!validationResult) {
+        validate(validationResult, "Bitte einen gültigen Trainingstyp wählen.")
+    } else validate(validationResult, "")
+
+    return validationResult
+}
+
+fun validateSport(sport: Sport, validate: (Boolean, String) -> Unit): Boolean {
+    val validationResult = sport.id != null
+    if (!validationResult) {
+        validate(validationResult, "Bitte eine gültige Sportart wählen.")
     } else validate(validationResult, "")
 
     return validationResult
