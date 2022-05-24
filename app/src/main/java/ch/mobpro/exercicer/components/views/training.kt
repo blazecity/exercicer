@@ -1,9 +1,9 @@
 package ch.mobpro.exercicer.components.views
 
-import android.annotation.SuppressLint
-import android.util.Half.toFloat
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,15 +29,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import ch.mobpro.exercicer.components.cards.*
 import ch.mobpro.exercicer.components.date.DatePickerField
+import ch.mobpro.exercicer.components.views.admin.TrainingTypeDialog
 import ch.mobpro.exercicer.components.views.goals.FullScreenGoalDialog
+import ch.mobpro.exercicer.components.views.goals.GoalCard
 import ch.mobpro.exercicer.components.views.goals.GoalsList
 import ch.mobpro.exercicer.data.entity.Goal
+import ch.mobpro.exercicer.data.entity.Sport
+import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import ch.mobpro.exercicer.data.util.getFormattedString
 import ch.mobpro.exercicer.viewmodel.SportViewModel
+import ch.mobpro.exercicer.viewmodel.TrainingTypeViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
 
 @Composable
@@ -49,7 +56,7 @@ fun TrainingPage() {
     }
 
     var newTraining by remember {
-        mutableStateOf(Training(date = LocalDate.MAX, sportId = 0))
+        mutableStateOf(Training(date = LocalDate.now(), sportId = 0))
     }
 
     Scaffold(
@@ -74,7 +81,7 @@ fun TrainingPage() {
                         showDialog = false
                     }
                 ) {
-                    AddTraining(newTraining)
+                    TrainingDialog(newTraining)
                 }
             }
         }
@@ -82,42 +89,69 @@ fun TrainingPage() {
 }
 
 @Composable
+fun TrainingEdit(trainingViewModel: TrainingViewModel){
+
+}
+
+@Composable
 fun TrainingList(trainingViewModel: TrainingViewModel){
-    val list = trainingViewModel.trainingList.collectAsState().value
-    if (list.isNotEmpty()){
+    val trainingList = trainingViewModel.trainingList.collectAsState().value
+    TrainingEdit(trainingViewModel)
+    if (trainingList.isNotEmpty()){
         LazyColumn() {
-            items(items = list) { list ->
-                DoTrainingCards(trainingSportTrainingType = list)
-            }
+            items(trainingList, key = {item -> item.training.id!!}, itemContent = { item ->
+                ItemDeleteAction(
+                    item = item.training,
+                    dismissAction = { trainingToDismiss ->
+                        trainingViewModel.delete(trainingToDismiss as Training)
+                    }
+                ) {
+                    DoTrainingCards(item, trainingViewModel)
+                }
+            })
+
         }
     } else {
-        Text("keine Trainings aufgezeichnet.")
+        Text("noch keine Trainings aufgezeichnet.")
     }
 }
 
 @Composable
-fun AddTraining(newTraining: Training) {
-    var text by remember {
+fun TrainingDialog(training: Training) {
+    var comment by remember {
         mutableStateOf("")
     }
 
-    var dropdownExpanded by remember {
-        mutableStateOf(false)
+    val context = LocalContext.current
+
+    var hour by remember {
+        mutableStateOf(training.trainingTimeHour)
+    }
+    var minute by remember {
+        mutableStateOf(training.trainingTimeMinutes)
+    }
+    var second by remember {
+        mutableStateOf(training.trainingTimeSeconds)
     }
 
-    var mTextFieldSize by remember { mutableStateOf(Size.Zero)}
+    var distance by remember {
+        mutableStateOf(training.trainingDistanceInMeters)
+    }
 
-    // Up Icon when expanded and down icon when collapsed
-    val icon = if (dropdownExpanded)
-        Icons.Filled.KeyboardArrowUp
-    else
-        Icons.Filled.KeyboardArrowDown
+    var currentDistanceUnit by remember {
+        mutableStateOf(training.distanceUnit)
+    }
 
     val sportViewModel: SportViewModel = hiltViewModel()
     var allSports = sportViewModel.sportList.collectAsState().value
 
-    var selectedText by remember {
-        mutableStateOf("")
+    var selectedSport by remember {
+        mutableStateOf(
+            if(allSports.isNotEmpty()) {
+                allSports.find { it.id == training.sportId } ?: allSports.first()
+            } else {
+                Sport(1, "Wähle Sport", 1!!) // Dummy Sport gewählt, da emptyList Exception
+            })
     }
 
     val date by remember {
@@ -128,48 +162,111 @@ fun AddTraining(newTraining: Training) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .weight(1f)
             ) {
                 DatePickerField(date, "Datum") { date ->
-                    newTraining.date = date
+                    training.date = date
                 }
             }
-
-            //Spacer(modifier = Modifier.padding(horizontal = 20.dp)) //nötig?
-
         }
 
-        OutlinedTextField(
-            value = selectedText,
-            onValueChange = { selectedText = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onGloballyPositioned { coordinates ->
-                    // This value is used to assign to the DropDown the same width
-                    mTextFieldSize = coordinates.size.toSize()
-                },
-            readOnly = true,
-            label = { Text("Sportart") },
-            trailingIcon = {
-                Icon(icon, "contentDescription",
-                    Modifier.clickable { dropdownExpanded = !dropdownExpanded })
-            }
-        )
-        DropdownMenu(
-            expanded = dropdownExpanded,
-            onDismissRequest = { dropdownExpanded = false },
-            modifier = Modifier
-                .width(with(LocalDensity.current) { mTextFieldSize.width.toDp() }),
-        ) {
-            allSports.forEach { label ->
-                DropdownMenuItem(onClick = {
-                    selectedText = label.name
-                    newTraining.sportId = label.id ?: 0 // Fehler: falls Label 0 => SportID 0
-                    dropdownExpanded = false
-                }) {
-                    Text(text = label.name)
-                }
+        Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        val trainings = sportViewModel.sportList.collectAsState().value
+        //val selectedSport = sportViewModel.getSportById(training.sportId)
+        Dropdown(
+            title = "Sportart",
+            list = allSports,
+            selectedItem = selectedSport
+        ){
+            training.sportId = (it as Sport).id!! //NPE bei Null
+        }
+
+        Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        //Row() {
+        //    OutlinedTextField(
+        //        modifier = Modifier
+        //            .padding(top = 20.dp),
+        //        label = { Text("Stunden") },
+        //        value = if(hour != 0){ hour.toString()} else {""},
+        //        onValueChange = {
+        //            try {
+        //                hour = it.toInt()
+        //            } catch (e: NumberFormatException){
+        //                //Text("Gib bitte eine Nummer ein!")
+        //                Toast.makeText(context, "Gib bitte eine Nummer ein!", Toast.LENGTH_SHORT)
+        //                Log.e("NotNumber", "Error: Not a Number in hour-Field")
+        //            } finally {
+        //                training.trainingTimeHour = hour
+        //            }
+        //        }
+        //    )
+        //    OutlinedTextField(
+        //        modifier = Modifier
+        //            .padding(top = 20.dp),
+        //        label = { Text("Minuten") },
+        //        value = if(minute != 0){ minute.toString()} else {""},
+        //        onValueChange = {
+        //            try {
+        //                minute = it.toInt()
+        //            } catch (e: NumberFormatException){
+        //                //Text("Gib bitte eine Nummer ein!")
+        //                Toast.makeText(context, "Gib bitte eine Nummer ein!", Toast.LENGTH_SHORT)
+        //                Log.e("NotNumber", "Error: Not a Number in minute-Field")
+        //            } finally {
+        //                training.trainingTimeMinutes = minute
+        //            }
+        //        }
+        //    )
+        //
+        //}
+        //Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        SecondsTimePicker(hour, minute, second) { hours, minutes, secoonds ->
+            hour = hours
+            minute = minutes
+            second = secoonds
+            training.trainingTimeHour = hour
+            training.trainingTimeMinutes = minute
+            training.trainingTimeSeconds = second
+        }
+
+        Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        Row() {
+            //OutlinedTextField(
+            //    modifier = Modifier
+            //        .padding(top = 20.dp),
+            //    label = { Text("Distanz") },
+            //    value = if(distance != 0){ distance.toString()} else {""},
+            //    onValueChange = {
+            //        try {
+            //            distance = it.toInt()
+            //        } catch (e: NumberFormatException){
+            //            Toast.makeText(context, "Gib bitte eine Nummer ein!", Toast.LENGTH_SHORT)
+            //            Log.e("NotNumber", "Error: Not a Number in distance-Field")
+            //        } finally {
+            //            training.trainingDistanceInMeters = distance
+            //        }
+            //    }
+            //)
+            //Dropdown(
+            //   title = "Einheit",
+            //   list = allSports,
+            //   //selectedItem = allSports.first() //selectedSport muss noch hinzugefügt werden, falls Sport schon ausgewählt
+            //{
+            //   training.sportId = (it as Sport).id!! //NPE bei Null
+            //
+
+            val distance2 = distance / currentDistanceUnit.multiplicator
+
+            DistancePicker(distance2, training.distanceUnit) { dist, distUnit ->
+                distance = dist * distUnit.multiplicator
+                currentDistanceUnit = distUnit
+
+                training.trainingDistanceInMeters = distance
+                training.distanceUnit = currentDistanceUnit
             }
         }
 
@@ -178,19 +275,25 @@ fun AddTraining(newTraining: Training) {
                 .fillMaxWidth()
                 .padding(top = 20.dp),
             label = { Text("Kommentar") },
-            value = text,
+            value = comment,
             onValueChange = {
-                text = it
-                newTraining.comment = it
+                comment = it
+                training.comment = it
             }
         )
     }
 }
 
 @Composable
-private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingTypeMapping) {
-    BaseCard {
-        CardContentRow {
+private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingTypeMapping, trainingViewModel: TrainingViewModel) {
+    var showEditDialog by remember {
+        mutableStateOf(false)
+    }
+
+    BaseCard(onClick = { showEditDialog = true }) {
+        CardContentRow(
+            //Modifier.clickable(onClick = TrainingDialog(training = trainingSportTrainingType.training)
+        ) {
             CardContentColumn {
                 //Image
                 Text("image")
@@ -234,28 +337,41 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
             }
         }
     }
-}
 
-@Preview
-@Composable
-fun Test(){
-    BaseCard {
-        CardContentColumn {
-            CardTitleRow {
-                Text("Hello World")
-                Text("22")
-            }
-            CardContentRow {
-                Text("Rowrow")
-                Text("Rowrow2")
-            }
-            CardContentRow {
-                Text("Rowrow3")
-                Text("Rowrow4")
-            }
-            Text("hihi")
-            Text("hihi")
-        }
+    val context = LocalContext.current
 
+    var editableTraining by remember {
+        mutableStateOf(Training(date = LocalDate.now(), sportId = 0))
     }
+
+    if (showEditDialog) {
+        FullScreenDialog(
+            title = "Training bearbeiten",
+            visible = showEditDialog,
+            onClose = { showEditDialog = false },
+            onSave = {
+                trainingViewModel.update(editableTraining)
+                showEditDialog = false
+                editableTraining = Training(date = LocalDate.now(), sportId = 0)
+            }
+        ) {
+            TrainingDialog(training = editableTraining,)
+        }
+    }
+
+    //if (showEditDialog) {
+    //    FullScreenDialog(
+    //        title = "Training bearbeiten",
+    //        goal = training,
+    //        sportViewModel = trainingViewModel,
+    //        visibilityChange = { visibility -> showEditDialog = visibility }
+    //    ) { validationSuccessful, validationMessage ->
+    //        if (!validationSuccessful) {
+    //            Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
+    //        } else {
+    //            trainingViewModel.update(training)
+    //            showDialog = false
+    //        }
+    //    }
+    //}
 }

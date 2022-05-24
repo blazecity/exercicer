@@ -1,6 +1,7 @@
 package ch.mobpro.exercicer.data.entity
 
 import androidx.room.*
+import ch.mobpro.exercicer.components.Listable
 import java.time.LocalDate
 
 @Entity(
@@ -18,18 +19,18 @@ import java.time.LocalDate
 data class Training(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "training_id")
-    val id: Long? = null,
+    override val id: Long? = null,
     var date: LocalDate,
     @ColumnInfo(name = "sport_fk") var sportId: Long,
     var trainingTimeHour: Int = 0,
     var trainingTimeMinutes: Int = 0,
     var trainingTimeSeconds: Int = 0,
     var trainingDistanceInMeters: Int = 0,
-    var distanceUnit: DistanceUnit? = DistanceUnit.KILOMETERS,
+    var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
     var sets: Int = 0,
     var repeats: Int = 0,
     var weight: Float = 0f,
     var intensity: Int = 0,  // soll nur bis 10 gehen
     var comment: String? = null
-)
+) : Listable
 

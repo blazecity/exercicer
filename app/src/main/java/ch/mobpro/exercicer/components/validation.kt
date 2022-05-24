@@ -6,9 +6,9 @@ fun validateTime(
     seconds: Int,
     validate: (Boolean, String) -> Unit
 ): Boolean {
-    val validationResult = hours != 0 || minutes != 0 || seconds != 0
+    val validationResult = (hours >= 0 && minutes >= 0 && seconds >= 0) && (hours > 0 || minutes > 0 || seconds > 0)
     if (!validationResult) {
-        validate(validationResult, "Die Zeit darf nicht 00:00:00 sein.")
+        validate(validationResult, "Die Zeit darf nicht 00:00:00 oder negativ sein.")
     } else validate(validationResult, "")
 
     return validationResult
