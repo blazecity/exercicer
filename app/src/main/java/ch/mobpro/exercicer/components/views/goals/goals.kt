@@ -114,18 +114,18 @@ fun GoalCard(
             mutableStateOf(flow)
         }
         val sumSeconds = sum.observeAsState().value?.sumTime ?: 0
-        val sumDistance = sum.observeAsState().value?.sumDistance ?: 0
+        val sumDistance = sum.observeAsState().value?.sumDistance ?: 0f
         val sumTimes = sum.observeAsState().value?.sumTimes ?: 0
         val maxWeight = sum.observeAsState().value?.maxWeight ?: 0f
 
         // distance goal
-        if (goal.distanceGoalInMetres != 0) {
+        if (goal.distanceGoalInMetres != 0f) {
             GoalStatusBar(
                 goalLabel = "Distanz",
                 targetText = getFormattedDistance(goal.distanceGoalInMetres, goal.distanceUnit)!!,
-                target = goal.distanceGoalInMetres.toFloat(),
+                target = goal.distanceGoalInMetres,
                 effectiveText = getFormattedDistance(sumDistance, goal.distanceUnit)!!,
-                effective = sumDistance.toFloat()
+                effective = sumDistance
             )
         }
 
@@ -313,7 +313,7 @@ private fun validateAll(
     hours: Int,
     minutes: Int,
     seconds: Int,
-    distance: Int,
+    distance: Float,
     times: Int,
     weight: Float,
     validate: (Boolean, String) -> Unit
@@ -375,7 +375,7 @@ fun GoalDialog(
     }
 
     var hasDistanceGoal by remember {
-        mutableStateOf(goal.distanceGoalInMetres != 0)
+        mutableStateOf(goal.distanceGoalInMetres != 0f)
     }
 
     var distanceGoal by remember {
@@ -524,7 +524,7 @@ fun GoalDialog(
             onCheckedChange = {
                 hasDistanceGoal = it
                 if (!hasDistanceGoal) {
-                    goal.distanceGoalInMetres = 0
+                    goal.distanceGoalInMetres = 0f
                 } else {
                     goal.distanceGoalInMetres = distanceGoal
                 }

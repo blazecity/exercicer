@@ -144,14 +144,16 @@ fun TrainingDialog(training: Training) {
     }
 
     val sportViewModel: SportViewModel = hiltViewModel()
-    var allSports = sportViewModel.sportList.collectAsState().value
+    val allSports = sportViewModel.sportList.collectAsState().value
 
-    var selectedSport by remember {
+    val number: Int? = null
+
+    val selectedSport by remember {
         mutableStateOf(
             if(allSports.isNotEmpty()) {
                 allSports.find { it.id == training.sportId } ?: allSports.first()
             } else {
-                Sport(1, "Wähle Sport", 1!!) // Dummy Sport gewählt, da emptyList Exception
+                Sport(1, "Wähle Sport", 1) // Dummy Sport gewählt, da emptyList Exception
             })
     }
 

@@ -21,7 +21,7 @@ fun Double.round(decimals: Int): Double {
     return kotlin.math.round(this * multiplier) / multiplier
 }
 
-fun getFormattedDistance(distanceInMetres: Int?, distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS): String? {
+fun getFormattedDistance(distanceInMetres: Float?, distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS): String? {
     if (distanceInMetres == null) return null
     return if (distanceUnit == DistanceUnit.KILOMETERS) {
         val distanceInKm = distanceInMetres / 1000.0

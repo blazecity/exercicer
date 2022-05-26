@@ -35,8 +35,8 @@ fun validateAnySet(
     return validationResult
 }
 
-fun validateDistance(distance: Int, validate: (Boolean, String) -> Unit): Boolean {
-    val validationResult = distance != 0
+fun validateDistance(distance: Float, validate: (Boolean, String) -> Unit): Boolean {
+    val validationResult = distance != 0f
     if (!validationResult) {
         validate(validationResult, "Die Distanz darf nicht 0 sein.")
     } else validate(validationResult, "")

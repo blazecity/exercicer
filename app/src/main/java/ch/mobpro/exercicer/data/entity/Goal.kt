@@ -33,7 +33,7 @@ data class Goal(
     var trainingTimeGoalHours: Int = 0,
     var trainingTimeGoalMinutes: Int = 0,
     var trainingTimeGoalSeconds: Int = 0,
-    var distanceGoalInMetres: Int = 0,
+    var distanceGoalInMetres: Float = 0f,
     var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
     var numberOfTimesGoal: Int = 0,
     var weightGoal: Float = 0f

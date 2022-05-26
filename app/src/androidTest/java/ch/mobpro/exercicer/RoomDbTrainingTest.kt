@@ -58,11 +58,11 @@ class RoomDbTrainingTest: TestDatabase() {
         val sportId = sportDao.insert(sport)
         val training1 = Training(date = LocalDate.now(),
                                 sportId = sportId,
-                                remarks = "Training 1")
+                                comment = "Training 1")
 
         val training2 = Training(date = LocalDate.now().plusDays(1),
                                 sportId = sportId,
-                                remarks = "Training 2")
+                                comment = "Training 2")
 
         // Act
         trainingDao.insert(training1)
@@ -84,13 +84,13 @@ class RoomDbTrainingTest: TestDatabase() {
         val sportId = sportDao.insert(sport)
         val training = Training(date = LocalDate.now(),
                                 sportId = sportId,
-                                remarks = "Before update")
+                                comment = "Before update")
 
         trainingDao.insert(training)
         var trainingFromDb = trainingDao.getAll().first().first().training
 
         // Act
-        trainingFromDb.remarks = "After update"
+        trainingFromDb.comment = "After update"
         trainingDao.update(trainingFromDb)
         val trainingListAfterUpdate = trainingDao.getAll().first()
         val trainingAfterUpdate = trainingListAfterUpdate.first().training
@@ -111,14 +111,14 @@ class RoomDbTrainingTest: TestDatabase() {
         val sportTennisId = sportDao.insert(sportTennis)
         val training = Training(date = LocalDate.now(),
                                 sportId = sportGymId,
-                                remarks = "Gym exercises")
+                                comment = "Gym exercises")
 
         trainingDao.insert(training)
         val trainingFromDb = trainingDao.getAll().first().first().training
 
         // Act
         trainingFromDb.sportId = sportTennisId
-        trainingFromDb.remarks = "Tennis"
+        trainingFromDb.comment = "Tennis"
         trainingDao.update(trainingFromDb)
         val trainingListAfterUpdate = trainingDao.getAll().first()
         val trainingAfterUpdate = trainingListAfterUpdate.first().training
@@ -159,16 +159,16 @@ class RoomDbTrainingTest: TestDatabase() {
         val trainingList = listOf(
             Training(date = LocalDate.of(2022, 1, 1),
                 sportId = sportGymId,
-                trainingDistanceInMeters = 10),
+                trainingDistanceInMeters = 10f),
             Training(date = LocalDate.of(2022, 1, 2),
                 sportId = sportTennisId,
-                trainingDistanceInMeters = 20),
+                trainingDistanceInMeters = 20f),
             Training(date = LocalDate.of(2022, 1, 3),
                 sportId = sportGymId,
-                trainingDistanceInMeters = 15),
+                trainingDistanceInMeters = 15f),
             Training(date = LocalDate.of(2022, 1, 4),
                 sportId = sportTennisId,
-                trainingDistanceInMeters = 40)
+                trainingDistanceInMeters = 40f)
         )
         trainingList.forEach {
             trainingDao.insert(it)
@@ -182,14 +182,14 @@ class RoomDbTrainingTest: TestDatabase() {
 
         // SAMPLE CODE FOR AGGREGATION
         val mappingsPerTrainingType = filteredTrainings.groupBy { it.trainingType }.toMutableMap()
-        val resultMap = mutableMapOf<TrainingType, Map<Sport, Int>>()
+        val resultMap = mutableMapOf<TrainingType, Map<Sport, Float>>()
         for (trainingTypeKey in mappingsPerTrainingType.keys) {
             val mapValue = mappingsPerTrainingType[trainingTypeKey]!!
             val groupedValue = mapValue.groupBy { it.sport }
             for (sportKey in groupedValue.keys) {
                 val trainingList = groupedValue[sportKey]!!
-                val aggregate: Int = trainingList.fold(0) {left, right ->
-                    left + right.training.trainingDistanceInMeters!!
+                val aggregate: Float = trainingList.fold(0f) {left, right ->
+                    left + right.training.trainingDistanceInMeters
                 }
                 val aggMap = resultMap.getOrPut(trainingTypeKey) { mutableMapOf() }.toMutableMap()
                 aggMap[sportKey] = aggregate

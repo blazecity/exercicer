@@ -72,7 +72,7 @@ class RoomDbGoalTest: TestDatabase() {
         var goalFromDb = goalDao.getAll().first().first().goal
 
         // Act
-        goalFromDb.distanceGoalInMetres = 1000
+        goalFromDb.distanceGoalInMetres = 1000f
         goalDao.update(goalFromDb)
         val goalListAfterUpdate = goalDao.getAll().first()
         val goalAfterUpdate = goalListAfterUpdate.first().goal
