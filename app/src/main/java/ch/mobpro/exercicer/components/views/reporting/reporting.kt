@@ -140,7 +140,7 @@ fun ReportingRow(bold: Boolean, vararg rowValues: String) {
                     .weight(weight),
                 fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
                 textAlign = if (rightAligned) TextAlign.Right else TextAlign.Left,
-                fontSize = 12.sp
+                fontSize = 14.sp
             )
 
             // following cols after first row have weight of 0.4
