@@ -30,6 +30,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
+import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.cards.*
 import ch.mobpro.exercicer.components.date.DatePickerField
 import ch.mobpro.exercicer.components.views.admin.TrainingTypeDialog
@@ -296,6 +297,7 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
         ) {
             CardContentColumn {
                 //Image
+                R.drawable.running
                 Text("image")
             }
             CardContentColumn {
