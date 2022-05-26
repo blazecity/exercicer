@@ -469,9 +469,9 @@ fun Dropdown(
 
 @Composable
 fun DistancePicker(
-    initialDistance: Int = 0,
+    initialDistance: Float = 0f,
     initialDistanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
-    onChange: (Int, DistanceUnit) -> Unit
+    onChange: (Float, DistanceUnit) -> Unit
 ) {
     var distance by remember {
         mutableStateOf(initialDistance)

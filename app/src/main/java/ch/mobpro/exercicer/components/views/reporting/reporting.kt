@@ -163,7 +163,7 @@ fun ReportingList(
             val reportingEntries = mutableListOf<ReportingEntry>()
             val subMap = dataMap[key]!!
             var sumTime = 0
-            var sumDistance = 0
+            var sumDistance = 0f
             var sumSets = 0
             var averageRepeats = 0f
             var averageWeight = 0f
@@ -218,7 +218,7 @@ fun ReportingList(
 fun ReportingCard(
     title: String,
     reportingEntries: List<ReportingEntry>,
-    sumDistance: Int,
+    sumDistance: Float,
     sumTime: Int,
     sumSets: Int,
     averageRepeats: Float,

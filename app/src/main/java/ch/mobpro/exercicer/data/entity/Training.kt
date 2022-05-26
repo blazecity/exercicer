@@ -25,7 +25,7 @@ data class Training(
     var trainingTimeHour: Int = 0,
     var trainingTimeMinutes: Int = 0,
     var trainingTimeSeconds: Int = 0,
-    var trainingDistanceInMeters: Int = 0,
+    var trainingDistanceInMeters: Float = 0f,
     var distanceUnit: DistanceUnit = DistanceUnit.KILOMETERS,
     var sets: Int = 0,
     var repeats: Int = 0,

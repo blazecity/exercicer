@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
             sport1.id!!,
             trainingTimeMinutes = 20,
             trainingTimeSeconds = 20,
-            trainingDistanceInMeters = 10,
+            trainingDistanceInMeters = 10f,
             sets = 2,
             repeats = 12,
             weight = 20f
@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
             start = LocalDate.of(2021, 4, 6),
             end = LocalDate.now(),
             sportId = sport1.id,
-            distanceGoalInMetres = 1000,
+            distanceGoalInMetres = 1000f,
             distanceUnit = DistanceUnit.KILOMETERS,
             trainingTimeGoalHours = 3,
             numberOfTimesGoal = 2,

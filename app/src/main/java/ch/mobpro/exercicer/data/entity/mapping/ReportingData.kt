@@ -2,7 +2,7 @@ package ch.mobpro.exercicer.data.entity.mapping
 
 data class ReportingData(
     val sumSeconds: Int = 0,
-    val sumMeters: Int = 0,
+    val sumMeters: Float = 0f,
     val sumSets: Int = 0,
     val averageRepeats: Float = 0f,
     val averageWeight: Float = 0f
