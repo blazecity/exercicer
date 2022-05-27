@@ -30,6 +30,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.cards.*
 import ch.mobpro.exercicer.components.date.DatePickerField
@@ -187,45 +188,6 @@ fun TrainingDialog(training: Training) {
 
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-        //Row() {
-        //    OutlinedTextField(
-        //        modifier = Modifier
-        //            .padding(top = 20.dp),
-        //        label = { Text("Stunden") },
-        //        value = if(hour != 0){ hour.toString()} else {""},
-        //        onValueChange = {
-        //            try {
-        //                hour = it.toInt()
-        //            } catch (e: NumberFormatException){
-        //                //Text("Gib bitte eine Nummer ein!")
-        //                Toast.makeText(context, "Gib bitte eine Nummer ein!", Toast.LENGTH_SHORT)
-        //                Log.e("NotNumber", "Error: Not a Number in hour-Field")
-        //            } finally {
-        //                training.trainingTimeHour = hour
-        //            }
-        //        }
-        //    )
-        //    OutlinedTextField(
-        //        modifier = Modifier
-        //            .padding(top = 20.dp),
-        //        label = { Text("Minuten") },
-        //        value = if(minute != 0){ minute.toString()} else {""},
-        //        onValueChange = {
-        //            try {
-        //                minute = it.toInt()
-        //            } catch (e: NumberFormatException){
-        //                //Text("Gib bitte eine Nummer ein!")
-        //                Toast.makeText(context, "Gib bitte eine Nummer ein!", Toast.LENGTH_SHORT)
-        //                Log.e("NotNumber", "Error: Not a Number in minute-Field")
-        //            } finally {
-        //                training.trainingTimeMinutes = minute
-        //            }
-        //        }
-        //    )
-        //
-        //}
-        //Spacer(modifier = Modifier.padding(vertical = 10.dp))
-
         SecondsTimePicker(hour, minute, second) { hours, minutes, secoonds ->
             hour = hours
             minute = minutes
@@ -238,30 +200,6 @@ fun TrainingDialog(training: Training) {
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
         Row() {
-            //OutlinedTextField(
-            //    modifier = Modifier
-            //        .padding(top = 20.dp),
-            //    label = { Text("Distanz") },
-            //    value = if(distance != 0){ distance.toString()} else {""},
-            //    onValueChange = {
-            //        try {
-            //            distance = it.toInt()
-            //        } catch (e: NumberFormatException){
-            //            Toast.makeText(context, "Gib bitte eine Nummer ein!", Toast.LENGTH_SHORT)
-            //            Log.e("NotNumber", "Error: Not a Number in distance-Field")
-            //        } finally {
-            //            training.trainingDistanceInMeters = distance
-            //        }
-            //    }
-            //)
-            //Dropdown(
-            //   title = "Einheit",
-            //   list = allSports,
-            //   //selectedItem = allSports.first() //selectedSport muss noch hinzugefügt werden, falls Sport schon ausgewählt
-            //{
-            //   training.sportId = (it as Sport).id!! //NPE bei Null
-            //
-
             val distance2 = distance / currentDistanceUnit.multiplicator
 
             DistancePicker(distance2, training.distanceUnit) { dist, distUnit ->
@@ -298,9 +236,10 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
             //Modifier.clickable(onClick = TrainingDialog(training = trainingSportTrainingType.training)
         ) {
             CardContentColumn {
-                //Image
-                R.drawable.running
-                Text("image")
+                Icon(
+                    painterResource(id = R.drawable.running_48),
+                    contentDescription = "Standardicon"
+                )
             }
             CardContentColumn {
                 Text(trainingSportTrainingType.sport.name) //Name des Sports
@@ -330,11 +269,11 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
                 } else (Text("keine Zeitangabe"))
                 val distance = trainingSportTrainingType.training.trainingDistanceInMeters
                 if (distance != null) {
-                    if (distance > 1000) {
+                    if (distance >= 1000) {
                         val distanceKm: Float = distance.toFloat() / 1000
-                        Text("Distanz: $distanceKm km")
+                        Text("$distanceKm km")
                     } else {
-                        Text("Distanz: $distance m")
+                        Text("$distance m")
                     }
                 } else (Text("keine Distanzangabe"))
 

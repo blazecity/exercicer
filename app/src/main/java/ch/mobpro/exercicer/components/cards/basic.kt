@@ -71,7 +71,7 @@ fun CardContentRow(content: @Composable () -> Unit) {
 
 @Composable
 fun CardContentColumn(content: @Composable () -> Unit) {
-    Column(horizontalAlignment = Alignment.Start) {
+    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.padding(15.dp)) {
         content()
     }
 }
