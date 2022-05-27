@@ -69,9 +69,9 @@ fun GoalsPage() {
                     goal = editableGoal,
                     sportViewModel = sportViewModel,
                     visibilityChange = {visibility -> showDialog = visibility}
-                ) { validationSuccessful, validationMessage ->
-                    if (!validationSuccessful) {
-                        Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
+                ) { goalValidation ->
+                    if (!goalValidation.validate()) {
+                        Toast.makeText(context, goalValidation.getFirstEntryMessage(), Toast.LENGTH_LONG).show()
                     } else {
                         goalViewModel.insert(editableGoal)
                         showDialog = false
@@ -184,9 +184,9 @@ fun GoalCard(
             goal = goal,
             sportViewModel = sportViewModel,
             visibilityChange = { visibility -> showDialog = visibility }
-        ) { validationSuccessful, validationMessage ->
-            if (!validationSuccessful) {
-                Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
+        ) { goalValidation ->
+            if (!goalValidation.validate()) {
+                Toast.makeText(context, goalValidation.getFirstEntryMessage(), Toast.LENGTH_LONG).show()
             } else {
                 goalViewModel.update(goal)
                 showDialog = false
@@ -285,14 +285,12 @@ fun FullScreenGoalDialog(
     goal: Goal,
     sportViewModel: SportViewModel,
     visibilityChange: (Boolean) -> Unit,
-    onSave: (Boolean, String) -> Unit
+    onSave: (GoalValidation) -> Unit
 ) {
-    var validationSuccessful by remember {
-        mutableStateOf(false)
-    }
-
-    var validationMessage by remember {
-        mutableStateOf("Mindestens ein Ziel muss erfasst sein.")
+    val goalValidation by remember {
+        val goalValidation = GoalValidation()
+        goalValidation.addValidationEntry(ValidationEntry.ANY_SET)
+        mutableStateOf(goalValidation)
     }
 
     FullScreenDialog(
@@ -300,7 +298,7 @@ fun FullScreenGoalDialog(
         visible = true,
         onClose = { visibilityChange(false) },
         onSave = {
-            onSave(validationSuccessful, validationMessage)
+            onSave(goalValidation)
         }
     ) {
         val sportMap = sportViewModel.sportMap.collectAsState().value
@@ -314,40 +312,10 @@ fun FullScreenGoalDialog(
         GoalDialog(
             goal,
             sports,
-            trainingTypes
-        ) { valSuccess, valMessage ->
-            validationSuccessful = valSuccess
-            validationMessage = valMessage
-        }
+            trainingTypes,
+            goalValidation
+        )
     }
-}
-
-private fun validateAll(
-    fromDate: LocalDate,
-    toDate: LocalDate,
-    isTrainingTypeGoal: Boolean,
-    selectedSport: Sport,
-    selectedTrainingType: TrainingType,
-    hasTimeGoal: Boolean,
-    hasDistanceGoal: Boolean,
-    hasTimesGoal: Boolean,
-    hasWeightGoal: Boolean,
-    hours: Int,
-    minutes: Int,
-    seconds: Int,
-    distance: Float,
-    times: Int,
-    weight: Float,
-    validate: (Boolean, String) -> Unit
-) {
-    if (!validateDatePair(fromDate, toDate, validate)) return
-    if (isTrainingTypeGoal) if (!validateTrainingType(selectedTrainingType, validate)) return
-    if (!isTrainingTypeGoal) if (!validateSport(selectedSport, validate)) return
-    if (hasTimeGoal) if (!validateTime(hours, minutes, seconds, validate)) return
-    if (hasDistanceGoal) if (!validateDistance(distance, validate)) return
-    if (hasTimesGoal) if (!validateTimes(times, validate)) return
-    if (hasWeightGoal) if (!validateWeight(weight, validate)) return
-    if (!validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, validate)) return
 }
 
 @Composable
@@ -355,13 +323,13 @@ fun GoalDialog(
     goal: Goal,
     sportList: List<Sport>,
     trainingTypeList: List<TrainingType>,
-    validate: (Boolean, String) -> Unit
+    goalValidation: GoalValidation
 ) {
-    val start by remember {
+    var start by remember {
         mutableStateOf(goal.start)
     }
 
-    val end by remember {
+    var end by remember {
         mutableStateOf(goal.end)
     }
 
@@ -425,34 +393,15 @@ fun GoalDialog(
         mutableStateOf(goal.weightGoal)
     }
 
-    val validateAll = {
-        validateAll(
-            start,
-            end,
-            isTrainingTypeGoal,
-            selectedSport,
-            selectedTrainingType,
-            hasTimeGoal,
-            hasDistanceGoal,
-            hasTimesGoal,
-            hasWeightGoal,
-            hourTimeGoal,
-            minutesTimeGoal,
-            secondsTimeGoal,
-            distanceGoal,
-            timesGoal,
-            weightGoal,
-            validate
-        )
-    }
-
     Column(Modifier.verticalScroll(rememberScrollState())) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)) {
                 DatePickerField(start, "Von") { date ->
-                    goal.start = date
+                    start = date
+                    goal.start = start
+                    validateDatePair(start, end, goalValidation)
                 }
             }
 
@@ -462,7 +411,9 @@ fun GoalDialog(
                 .fillMaxWidth()
                 .weight(1f)) {
                 DatePickerField(end, "Bis") { date ->
-                    goal.end = date
+                    end = date
+                    goal.end = end
+                    validateDatePair(start, end, goalValidation)
                 }
             }
         }
@@ -477,12 +428,16 @@ fun GoalDialog(
                 if (isTrainingTypeGoal) {
                     goal.sportId = null
                     goal.trainingTypeId = selectedTrainingType.id
+
+                    validateTrainingType(selectedTrainingType, goalValidation)
+                    goalValidation.removeValidationEntry(ValidationEntry.SPORT)
                 } else {
                     goal.trainingTypeId = null
                     goal.sportId = selectedSport.id
-                }
 
-                validateAll()
+                    validateSport(selectedSport, goalValidation)
+                    goalValidation.removeValidationEntry(ValidationEntry.TRAINING_TYPE)
+                }
             }
         )
 
@@ -495,6 +450,8 @@ fun GoalDialog(
                 val newTrainingType = it as TrainingType
                 selectedTrainingType = newTrainingType
                 goal.trainingTypeId = selectedTrainingType.id
+
+                validateTrainingType(selectedTrainingType, goalValidation)
             }
         }
 
@@ -507,120 +464,144 @@ fun GoalDialog(
                 val newSport = it as Sport
                 selectedSport = newSport
                 goal.sportId = selectedSport.id
+
+                validateSport(selectedSport, goalValidation)
             }
         }
 
         // time goal
-        LabeledSwitch(
-            initialState = hasTimeGoal,
-            label = "Zeitziel",
-            onCheckedChange = {
-                hasTimeGoal = it
-                if (!hasTimeGoal) {
-                    goal.trainingTimeGoalHours = 0
-                    goal.trainingTimeGoalMinutes = 0
-                    goal.trainingTimeGoalSeconds = 0
-                } else {
+        if (isTrainingTypeGoal || selectedSport.hasTime) {
+            LabeledSwitch(
+                initialState = hasTimeGoal,
+                label = "Zeitziel",
+                onCheckedChange = {
+                    hasTimeGoal = it
+                    if (!hasTimeGoal) {
+                        goal.trainingTimeGoalHours = 0
+                        goal.trainingTimeGoalMinutes = 0
+                        goal.trainingTimeGoalSeconds = 0
+
+                        goalValidation.removeValidationEntry(ValidationEntry.TIME)
+                    } else {
+                        goal.trainingTimeGoalHours = hourTimeGoal
+                        goal.trainingTimeGoalMinutes = minutesTimeGoal
+                        goal.trainingTimeGoalSeconds = secondsTimeGoal
+
+                        validateTime(hourTimeGoal, minutesTimeGoal, secondsTimeGoal, goalValidation)
+                    }
+
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                }
+            )
+
+            if (hasTimeGoal) {
+                SecondsTimePicker(hourTimeGoal, minutesTimeGoal, secondsTimeGoal) { hours, minutes, seconds ->
+                    hourTimeGoal = hours
+                    minutesTimeGoal = minutes
+                    secondsTimeGoal = seconds
                     goal.trainingTimeGoalHours = hourTimeGoal
                     goal.trainingTimeGoalMinutes = minutesTimeGoal
                     goal.trainingTimeGoalSeconds = secondsTimeGoal
+
+                    validateTime(hourTimeGoal, minutesTimeGoal, secondsTimeGoal, goalValidation)
                 }
-                validateAll()
-            }
-        )
-
-        if (hasTimeGoal) {
-            SecondsTimePicker(hourTimeGoal, minutesTimeGoal, secondsTimeGoal) { hours, minutes, seconds ->
-                hourTimeGoal = hours
-                minutesTimeGoal = minutes
-                secondsTimeGoal = seconds
-                goal.trainingTimeGoalHours = hourTimeGoal
-                goal.trainingTimeGoalMinutes = minutesTimeGoal
-                goal.trainingTimeGoalSeconds = secondsTimeGoal
-
-                validateAll()
             }
         }
 
         // distance goal
-        LabeledSwitch(
-            initialState = hasDistanceGoal,
-            label = "Distanzziel",
-            onCheckedChange = {
-                hasDistanceGoal = it
-                if (!hasDistanceGoal) {
-                    goal.distanceGoalInMetres = 0f
-                } else {
-                    goal.distanceGoalInMetres = distanceGoal
+        if (isTrainingTypeGoal || selectedSport.hasDistance) {
+            LabeledSwitch(
+                initialState = hasDistanceGoal,
+                label = "Distanzziel",
+                onCheckedChange = {
+                    hasDistanceGoal = it
+                    if (!hasDistanceGoal) {
+                        goal.distanceGoalInMetres = 0f
+                        goalValidation.removeValidationEntry(ValidationEntry.DISTANCE)
+                    } else {
+                        goal.distanceGoalInMetres = distanceGoal
+                        validateDistance(distanceGoal, goalValidation)
+                    }
+
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
                 }
-                validateAll()
-            }
-        )
+            )
 
-        if (hasDistanceGoal) {
-            val distance = distanceGoal / currentDistanceUnit.multiplicator
+            if (hasDistanceGoal) {
+                val distance = distanceGoal / currentDistanceUnit.multiplicator
 
-            DistancePicker(distance, goal.distanceUnit) { dist, distUnit ->
-                distanceGoal = dist * distUnit.multiplicator
-                currentDistanceUnit = distUnit
+                DistancePicker(distance, goal.distanceUnit) { dist, distUnit ->
+                    distanceGoal = dist * distUnit.multiplicator
+                    currentDistanceUnit = distUnit
 
-                goal.distanceGoalInMetres = distanceGoal
-                goal.distanceUnit = currentDistanceUnit
+                    goal.distanceGoalInMetres = distanceGoal
+                    goal.distanceUnit = currentDistanceUnit
 
-                validateAll()
+                    validateDistance(distanceGoal, goalValidation)
+                }
             }
         }
 
         // times goal
-        LabeledSwitch(
-            initialState = hasTimesGoal,
-            label = "Ziele Anzahl Male",
-            onCheckedChange = {
-                hasTimesGoal = it
-                if (!hasTimesGoal) {
-                    goal.numberOfTimesGoal = 0
-                } else {
-                    goal.numberOfTimesGoal = timesGoal
-                }
-                validateAll()
-            }
-        )
+        if (isTrainingTypeGoal || selectedSport.hasNumberOfTimes) {
+            LabeledSwitch(
+                initialState = hasTimesGoal,
+                label = "Ziele Anzahl Male",
+                onCheckedChange = {
+                    hasTimesGoal = it
+                    if (!hasTimesGoal) {
+                        goal.numberOfTimesGoal = 0
+                        goalValidation.removeValidationEntry(ValidationEntry.NUMBER_OF_TIMES)
+                    } else {
+                        goal.numberOfTimesGoal = timesGoal
+                        validateTimes(timesGoal, goalValidation)
+                    }
 
-        if (hasTimesGoal) {
-            NumberInput(
-                label = "Anzahl Male",
-                initialValue = timesGoal,
-                onValueChange = {
-                    timesGoal = it
-                    goal.numberOfTimesGoal = timesGoal
-                    validateAll()
-                })
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                }
+            )
+
+            if (hasTimesGoal) {
+                NumberInput(
+                    label = "Anzahl Male",
+                    initialValue = timesGoal,
+                    onValueChange = {
+                        timesGoal = it
+                        goal.numberOfTimesGoal = timesGoal
+                        validateTimes(timesGoal, goalValidation)
+                    })
+            }
         }
 
         // weight goal
-        LabeledSwitch(
-            initialState = hasWeightGoal,
-            label = "Ziel Trainingsgewicht",
-            onCheckedChange = {
-                hasWeightGoal = it
-                if (!hasWeightGoal) {
-                    goal.weightGoal = 0f
-                } else {
-                    goal.weightGoal = weightGoal
-                }
-                validateAll()
-            }
-        )
+        if (isTrainingTypeGoal || selectedSport.hasWeight) {
+            LabeledSwitch(
+                initialState = hasWeightGoal,
+                label = "Ziel Trainingsgewicht",
+                onCheckedChange = {
+                    hasWeightGoal = it
+                    if (!hasWeightGoal) {
+                        goal.weightGoal = 0f
+                        goalValidation.removeValidationEntry(ValidationEntry.WEIGHT)
+                    } else {
+                        goal.weightGoal = weightGoal
+                        validateWeight(weightGoal, goalValidation)
+                    }
 
-        if (hasWeightGoal) {
-            NumberInput(
-                label = "Gewicht",
-                initialValue = weightGoal,
-                onValueChange = {
-                    weightGoal = it
-                    goal.weightGoal = it
-                    validateAll()
-                })
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                }
+            )
+
+            if (hasWeightGoal) {
+                NumberInput(
+                    label = "Gewicht",
+                    initialValue = weightGoal,
+                    onValueChange = {
+                        weightGoal = it
+                        goal.weightGoal = it
+                        validateWeight(weightGoal, goalValidation)
+                    })
+            }
         }
     }
 }
