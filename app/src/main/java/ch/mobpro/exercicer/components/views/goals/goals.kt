@@ -285,12 +285,12 @@ fun FullScreenGoalDialog(
     goal: Goal,
     sportViewModel: SportViewModel,
     visibilityChange: (Boolean) -> Unit,
-    onSave: (GoalValidation) -> Unit
+    onSave: (Validation) -> Unit
 ) {
     val goalValidation by remember {
-        val goalValidation = GoalValidation()
-        goalValidation.addValidationEntry(ValidationEntry.ANY_SET)
-        mutableStateOf(goalValidation)
+        val validation = Validation()
+        validation.addValidationEntry(ValidationEntry.ANY_SET)
+        mutableStateOf(validation)
     }
 
     FullScreenDialog(
@@ -323,7 +323,7 @@ fun GoalDialog(
     goal: Goal,
     sportList: List<Sport>,
     trainingTypeList: List<TrainingType>,
-    goalValidation: GoalValidation
+    validation: Validation
 ) {
     var start by remember {
         mutableStateOf(goal.start)
@@ -401,7 +401,7 @@ fun GoalDialog(
                 DatePickerField(start, "Von") { date ->
                     start = date
                     goal.start = start
-                    validateDatePair(start, end, goalValidation)
+                    validateDatePair(start, end, validation)
                 }
             }
 
@@ -413,7 +413,7 @@ fun GoalDialog(
                 DatePickerField(end, "Bis") { date ->
                     end = date
                     goal.end = end
-                    validateDatePair(start, end, goalValidation)
+                    validateDatePair(start, end, validation)
                 }
             }
         }
@@ -429,14 +429,14 @@ fun GoalDialog(
                     goal.sportId = null
                     goal.trainingTypeId = selectedTrainingType.id
 
-                    validateTrainingType(selectedTrainingType, goalValidation)
-                    goalValidation.removeValidationEntry(ValidationEntry.SPORT)
+                    validateTrainingType(selectedTrainingType, validation)
+                    validation.removeValidationEntry(ValidationEntry.SPORT)
                 } else {
                     goal.trainingTypeId = null
                     goal.sportId = selectedSport.id
 
-                    validateSport(selectedSport, goalValidation)
-                    goalValidation.removeValidationEntry(ValidationEntry.TRAINING_TYPE)
+                    validateSport(selectedSport, validation)
+                    validation.removeValidationEntry(ValidationEntry.TRAINING_TYPE)
                 }
             }
         )
@@ -451,7 +451,7 @@ fun GoalDialog(
                 selectedTrainingType = newTrainingType
                 goal.trainingTypeId = selectedTrainingType.id
 
-                validateTrainingType(selectedTrainingType, goalValidation)
+                validateTrainingType(selectedTrainingType, validation)
             }
         }
 
@@ -465,7 +465,7 @@ fun GoalDialog(
                 selectedSport = newSport
                 goal.sportId = selectedSport.id
 
-                validateSport(selectedSport, goalValidation)
+                validateSport(selectedSport, validation)
             }
         }
 
@@ -481,16 +481,16 @@ fun GoalDialog(
                         goal.trainingTimeGoalMinutes = 0
                         goal.trainingTimeGoalSeconds = 0
 
-                        goalValidation.removeValidationEntry(ValidationEntry.TIME)
+                        validation.removeValidationEntry(ValidationEntry.TIME)
                     } else {
                         goal.trainingTimeGoalHours = hourTimeGoal
                         goal.trainingTimeGoalMinutes = minutesTimeGoal
                         goal.trainingTimeGoalSeconds = secondsTimeGoal
 
-                        validateTime(hourTimeGoal, minutesTimeGoal, secondsTimeGoal, goalValidation)
+                        validateTime(hourTimeGoal, minutesTimeGoal, secondsTimeGoal, validation)
                     }
 
-                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, validation)
                 }
             )
 
@@ -503,7 +503,7 @@ fun GoalDialog(
                     goal.trainingTimeGoalMinutes = minutesTimeGoal
                     goal.trainingTimeGoalSeconds = secondsTimeGoal
 
-                    validateTime(hourTimeGoal, minutesTimeGoal, secondsTimeGoal, goalValidation)
+                    validateTime(hourTimeGoal, minutesTimeGoal, secondsTimeGoal, validation)
                 }
             }
         }
@@ -517,13 +517,13 @@ fun GoalDialog(
                     hasDistanceGoal = it
                     if (!hasDistanceGoal) {
                         goal.distanceGoalInMetres = 0f
-                        goalValidation.removeValidationEntry(ValidationEntry.DISTANCE)
+                        validation.removeValidationEntry(ValidationEntry.DISTANCE)
                     } else {
                         goal.distanceGoalInMetres = distanceGoal
-                        validateDistance(distanceGoal, goalValidation)
+                        validateDistance(distanceGoal, validation)
                     }
 
-                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, validation)
                 }
             )
 
@@ -537,7 +537,7 @@ fun GoalDialog(
                     goal.distanceGoalInMetres = distanceGoal
                     goal.distanceUnit = currentDistanceUnit
 
-                    validateDistance(distanceGoal, goalValidation)
+                    validateDistance(distanceGoal, validation)
                 }
             }
         }
@@ -551,13 +551,13 @@ fun GoalDialog(
                     hasTimesGoal = it
                     if (!hasTimesGoal) {
                         goal.numberOfTimesGoal = 0
-                        goalValidation.removeValidationEntry(ValidationEntry.NUMBER_OF_TIMES)
+                        validation.removeValidationEntry(ValidationEntry.NUMBER_OF_TIMES)
                     } else {
                         goal.numberOfTimesGoal = timesGoal
-                        validateTimes(timesGoal, goalValidation)
+                        validateTimes(timesGoal, validation)
                     }
 
-                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, validation)
                 }
             )
 
@@ -568,7 +568,7 @@ fun GoalDialog(
                     onValueChange = {
                         timesGoal = it
                         goal.numberOfTimesGoal = timesGoal
-                        validateTimes(timesGoal, goalValidation)
+                        validateTimes(timesGoal, validation)
                     })
             }
         }
@@ -582,13 +582,13 @@ fun GoalDialog(
                     hasWeightGoal = it
                     if (!hasWeightGoal) {
                         goal.weightGoal = 0f
-                        goalValidation.removeValidationEntry(ValidationEntry.WEIGHT)
+                        validation.removeValidationEntry(ValidationEntry.WEIGHT)
                     } else {
                         goal.weightGoal = weightGoal
-                        validateWeight(weightGoal, goalValidation)
+                        validateWeight(weightGoal, validation)
                     }
 
-                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, goalValidation)
+                    validateAnySet(hasTimeGoal, hasDistanceGoal, hasTimesGoal, hasWeightGoal, validation)
                 }
             )
 
@@ -599,7 +599,7 @@ fun GoalDialog(
                     onValueChange = {
                         weightGoal = it
                         goal.weightGoal = it
-                        validateWeight(weightGoal, goalValidation)
+                        validateWeight(weightGoal, validation)
                     })
             }
         }

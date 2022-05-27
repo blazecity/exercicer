@@ -15,29 +15,22 @@ enum class ValidationEntry(val message: String) {
     SPORT("Bitte eine gültige Sportart wählen.")
 }
 
-interface Validation {
-    fun addValidationEntry(entry: ValidationEntry)
-    fun removeValidationEntry(entry: ValidationEntry)
-    fun validate(): Boolean
-    fun getFirstEntryMessage(): String?
-}
-
-class GoalValidation: Validation {
+class Validation {
     private val validationEntries = mutableListOf<ValidationEntry>()
 
-    override fun addValidationEntry(entry: ValidationEntry) {
+    fun addValidationEntry(entry: ValidationEntry) {
         validationEntries.add(entry)
     }
 
-    override fun removeValidationEntry(entry: ValidationEntry) {
+    fun removeValidationEntry(entry: ValidationEntry) {
         validationEntries.remove(entry)
     }
 
-    override fun validate(): Boolean {
+    fun validate(): Boolean {
         return validationEntries.isEmpty()
     }
 
-    override fun getFirstEntryMessage(): String? {
+    fun getFirstEntryMessage(): String? {
         if (validationEntries.isEmpty()) return null
         return validationEntries.first().message
     }
