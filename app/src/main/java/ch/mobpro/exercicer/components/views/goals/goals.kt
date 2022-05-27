@@ -243,11 +243,11 @@ fun GoalsList(
     goalViewModel: GoalViewModel,
     sportViewModel: SportViewModel
 ) {
-    val goalList = goalViewModel.goalList.collectAsState().value
+    val goalList = goalViewModel.goalList.collectAsState().value.toMutableList()
     val achievementViewModel: AchievementViewModel = hiltViewModel()
 
-    val expiredGoals = goalList.filter { it.goal.end > LocalDate.now() }
-    val activeGoals = goalList.filter { it.goal.end <= LocalDate.now() }
+    val expiredGoals = goalList.filter { it.goal.end > LocalDate.now() }.toMutableList()
+    val activeGoals = goalList.filter { it.goal.end <= LocalDate.now() }.toMutableList()
 
     var showArchivedGoals by remember {
         mutableStateOf(false)
@@ -270,6 +270,7 @@ fun GoalsList(
                     item = item.goal,
                     dismissAction = { goalToDismiss ->
                         goalViewModel.delete(goalToDismiss as Goal)
+                        goalList.remove(item)
                     }
                 ) {
                     GoalCard(item, achievementViewModel, goalViewModel, sportViewModel)

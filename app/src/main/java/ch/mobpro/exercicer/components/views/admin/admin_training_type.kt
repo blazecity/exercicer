@@ -24,7 +24,12 @@ fun TrainingTypeList(viewModel: TrainingTypeViewModel) {
         mutableStateOf(TrainingType(name = ""))
     }
 
-    ListDeleteAction(list = items, dismissAction = { viewModel.delete(it as TrainingType) }) { item ->
+    ListDeleteAction(
+        list = items.toMutableList(),
+        dismissAction = {
+            viewModel.delete(it as TrainingType)
+        }
+    ) { item ->
         editableTrainingType = (item as TrainingType).copy()
         showEditDialog = true
     }

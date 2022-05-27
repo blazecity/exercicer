@@ -28,7 +28,8 @@ fun SportList(viewModel: SportViewModel, trainingTypeViewModel: TrainingTypeView
     }
 
     val sportMap = viewModel.sportMap.collectAsState().value
-    ListDeleteAction(list = sportMap.keys.toList(), dismissAction = { viewModel.delete(it as Sport) }) { item ->
+    val list = sportMap.keys.toList()
+    ListDeleteAction(list = list.toMutableList(), dismissAction = { viewModel.delete(it as Sport) }) { item ->
         editableSport = (item as Sport).copy()
         showEditDialog = true
     }
