@@ -2,6 +2,7 @@ package ch.mobpro.exercicer.components
 
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
+import java.time.LocalDate
 
 fun validateTime(
     hours: Int,
@@ -75,6 +76,15 @@ fun validateSport(sport: Sport, validate: (Boolean, String) -> Unit): Boolean {
     val validationResult = sport.id != null
     if (!validationResult) {
         validate(validationResult, "Bitte eine gültige Sportart wählen.")
+    } else validate(validationResult, "")
+
+    return validationResult
+}
+
+fun validateDatePair(fromDate: LocalDate, toDate: LocalDate, validate: (Boolean, String) -> Unit): Boolean {
+    val validationResult = fromDate <= toDate
+    if (!validationResult) {
+        validate(validationResult, "Das Von-Datum darf nicht grösser als das Bis-Datum sein.")
     } else validate(validationResult, "")
 
     return validationResult
