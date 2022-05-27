@@ -34,7 +34,7 @@ import ch.mobpro.exercicer.data.util.*
 import ch.mobpro.exercicer.viewmodel.AchievementViewModel
 import ch.mobpro.exercicer.viewmodel.GoalViewModel
 import ch.mobpro.exercicer.viewmodel.SportViewModel
-import kotlin.math.min
+import java.time.LocalDate
 
 @Composable
 fun GoalsPage() {
@@ -245,17 +245,37 @@ fun GoalsList(
 ) {
     val goalList = goalViewModel.goalList.collectAsState().value
     val achievementViewModel: AchievementViewModel = hiltViewModel()
+
+    val expiredGoals = goalList.filter { it.goal.end > LocalDate.now() }
+    val activeGoals = goalList.filter { it.goal.end <= LocalDate.now() }
+
+    var showArchivedGoals by remember {
+        mutableStateOf(false)
+    }
+
+    SideLabeledSwitch(
+        initialState = showArchivedGoals,
+        labelLeft = "Aktive Ziele",
+        labelRight = "Archivierte Ziele",
+        onCheckedChange = {
+            showArchivedGoals = it
+        }
+    )
+
     LazyColumn {
-        items(goalList, key = {item -> item.goal.id!!}, itemContent = { item ->
-            ItemDeleteAction(
-                item = item.goal,
-                dismissAction = { goalToDismiss ->
-                    goalViewModel.delete(goalToDismiss as Goal)
+        items(if (showArchivedGoals) expiredGoals else activeGoals,
+            key = {item -> item.goal.id!!},
+            itemContent = { item ->
+                ItemDeleteAction(
+                    item = item.goal,
+                    dismissAction = { goalToDismiss ->
+                        goalViewModel.delete(goalToDismiss as Goal)
+                    }
+                ) {
+                    GoalCard(item, achievementViewModel, goalViewModel, sportViewModel)
                 }
-            ) {
-                GoalCard(item, achievementViewModel, goalViewModel, sportViewModel)
             }
-        })
+        )
     }
 }
 
@@ -303,6 +323,8 @@ fun FullScreenGoalDialog(
 }
 
 private fun validateAll(
+    fromDate: LocalDate,
+    toDate: LocalDate,
     isTrainingTypeGoal: Boolean,
     selectedSport: Sport,
     selectedTrainingType: TrainingType,
@@ -318,6 +340,7 @@ private fun validateAll(
     weight: Float,
     validate: (Boolean, String) -> Unit
 ) {
+    if (!validateDatePair(fromDate, toDate, validate)) return
     if (isTrainingTypeGoal) if (!validateTrainingType(selectedTrainingType, validate)) return
     if (!isTrainingTypeGoal) if (!validateSport(selectedSport, validate)) return
     if (hasTimeGoal) if (!validateTime(hours, minutes, seconds, validate)) return
@@ -404,6 +427,8 @@ fun GoalDialog(
 
     val validateAll = {
         validateAll(
+            start,
+            end,
             isTrainingTypeGoal,
             selectedSport,
             selectedTrainingType,
