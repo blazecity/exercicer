@@ -20,7 +20,11 @@ data class Sport(
     @ColumnInfo(name = "sport_id")
     override val id: Long? = null,
     @ColumnInfo(name = "sport_name") var name: String,
-    @ColumnInfo(name = "training_type_fk") var trainingTypeId: Long? = null
+    @ColumnInfo(name = "training_type_fk") var trainingTypeId: Long? = null,
+    var hasTime: Boolean = false,
+    var hasDistance: Boolean = false,
+    var hasNumberOfTimes: Boolean = false,
+    var hasWeight: Boolean = false
 ): Comparable<Sport>, Listable {
     override fun toString(): String {
         return this.name

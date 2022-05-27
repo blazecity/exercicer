@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ch.mobpro.exercicer.components.Dropdown
 import ch.mobpro.exercicer.components.FullScreenDialog
+import ch.mobpro.exercicer.components.LabeledSwitch
 import ch.mobpro.exercicer.components.ListDeleteAction
 import ch.mobpro.exercicer.data.entity.Sport
 import ch.mobpro.exercicer.data.entity.TrainingType
@@ -27,7 +28,8 @@ fun SportList(viewModel: SportViewModel, trainingTypeViewModel: TrainingTypeView
     }
 
     val sportMap = viewModel.sportMap.collectAsState().value
-    ListDeleteAction(list = sportMap.keys.toList(), dismissAction = { viewModel.delete(it as Sport) }) { item ->
+    val list = sportMap.keys.toList()
+    ListDeleteAction(list = list.toMutableList(), dismissAction = { viewModel.delete(it as Sport) }) { item ->
         editableSport = (item as Sport).copy()
         showEditDialog = true
     }
@@ -57,6 +59,22 @@ fun SportDialog(sport: Sport, trainingType: TrainingType, list: List<TrainingTyp
         mutableStateOf(sport.name)
     }
 
+    var hasTime by remember {
+        mutableStateOf(sport.hasTime)
+    }
+
+    var hasDistance by remember {
+        mutableStateOf(sport.hasDistance)
+    }
+
+    var hasNumberOfTimes by remember {
+        mutableStateOf(sport.hasNumberOfTimes)
+    }
+
+    var hasWeight by remember {
+        mutableStateOf(sport.hasWeight)
+    }
+
     sport.trainingTypeId = trainingType.id
 
     Column {
@@ -81,6 +99,44 @@ fun SportDialog(sport: Sport, trainingType: TrainingType, list: List<TrainingTyp
         ) {
             sport.trainingTypeId = (it as TrainingType).id
         }
+
+        Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        LabeledSwitch(
+            initialState = hasTime,
+            label = "Kann Zeit haben",
+            onCheckedChange = {
+                hasTime = it
+                sport.hasTime = hasTime
+            }
+        )
+
+        LabeledSwitch(
+            initialState = hasDistance,
+            label = "Kann Distanz haben",
+            onCheckedChange = {
+                hasDistance = it
+                sport.hasDistance = hasDistance
+            }
+        )
+
+        LabeledSwitch(
+            initialState = hasNumberOfTimes,
+            label = "Kann Anzahl Wiederholungen haben",
+            onCheckedChange = {
+                hasNumberOfTimes = it
+                sport.hasNumberOfTimes = hasNumberOfTimes
+            }
+        )
+
+        LabeledSwitch(
+            initialState = hasWeight,
+            label = "Kann Trainingsgewicht haben",
+            onCheckedChange = {
+                hasWeight = it
+                sport.hasWeight = hasWeight
+            }
+        )
     }
 
 }
