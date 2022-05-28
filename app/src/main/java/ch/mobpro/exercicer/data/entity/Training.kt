@@ -31,6 +31,6 @@ data class Training(
     var repeats: Int = 0,
     var weight: Float = 0f,
     var intensity: Int = 0,  // soll nur bis 10 gehen
-    var comment: String? = null
+    var comment: String = ""
 ) : Listable
 

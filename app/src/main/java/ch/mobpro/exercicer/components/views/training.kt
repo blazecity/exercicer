@@ -132,7 +132,7 @@ fun TrainingDialog(training: Training) {
     val context = LocalContext.current
 
     var comment by remember {
-        mutableStateOf("")
+        mutableStateOf(training.comment)
     }
 
     var hour by remember {
