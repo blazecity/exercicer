@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Exercicer</string>
+    <string name="app_name">Exerciser</string>
     <string name="time">Zeit</string>
     <string name="distance">Distanz</string>
     <string name="repeats">Wiederholungen</string>
