@@ -23,7 +23,8 @@ interface TrainingDao {
         "SELECT * " +
                 "FROM training " +
                 "JOIN sport ON training.sport_fk = sport.sport_id " +
-                "JOIN training_type ON sport.training_type_fk = training_type.training_type_id"
+                "JOIN training_type ON sport.training_type_fk = training_type.training_type_id " +
+                "ORDER BY training.date desc"
     )
     fun getAll(): Flow<List<TrainingSportTrainingTypeMapping>>
 

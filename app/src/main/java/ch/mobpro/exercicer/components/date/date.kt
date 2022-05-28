@@ -39,7 +39,7 @@ fun DatePickerField(initialDate: LocalDate = LocalDate.now(), labelText: String,
         OutlinedTextField(value = dateState.getFormattedString(),
             onValueChange = {},
             readOnly = true,
-            modifier = Modifier.padding(3.dp).height(55.dp),
+            modifier = Modifier.padding(3.dp).height(65.dp),
             label = { Text(labelText) },
             leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = "date range icon") }
         )

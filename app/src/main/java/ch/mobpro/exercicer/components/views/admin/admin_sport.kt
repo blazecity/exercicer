@@ -75,6 +75,10 @@ fun SportDialog(sport: Sport, trainingType: TrainingType, list: List<TrainingTyp
         mutableStateOf(sport.hasWeight)
     }
 
+    var hasIntensity by remember {
+        mutableStateOf(sport.hasIntensity)
+    }
+
     sport.trainingTypeId = trainingType.id
 
     Column {
@@ -135,6 +139,15 @@ fun SportDialog(sport: Sport, trainingType: TrainingType, list: List<TrainingTyp
             onCheckedChange = {
                 hasWeight = it
                 sport.hasWeight = hasWeight
+            }
+        )
+
+        LabeledSwitch(
+            initialState = hasIntensity,
+            label = "Kann Intensitätsangabe haben",
+            onCheckedChange = {
+                hasIntensity = it
+                sport.hasIntensity = hasIntensity
             }
         )
     }

@@ -24,13 +24,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import ch.mobpro.exercicer.components.*
-import ch.mobpro.exercicer.data.entity.Training
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import ch.mobpro.exercicer.R
 import ch.mobpro.exercicer.components.cards.*
 import ch.mobpro.exercicer.components.date.DatePickerField
@@ -38,16 +45,16 @@ import ch.mobpro.exercicer.components.views.admin.TrainingTypeDialog
 import ch.mobpro.exercicer.components.views.goals.FullScreenGoalDialog
 import ch.mobpro.exercicer.components.views.goals.GoalCard
 import ch.mobpro.exercicer.components.views.goals.GoalsList
-import ch.mobpro.exercicer.data.entity.Goal
-import ch.mobpro.exercicer.data.entity.Sport
-import ch.mobpro.exercicer.data.entity.TrainingType
+import ch.mobpro.exercicer.data.entity.*
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
 import ch.mobpro.exercicer.data.util.getFormattedString
 import ch.mobpro.exercicer.viewmodel.SportViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingTypeViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.selects.select
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 @Composable
 fun TrainingPage() {
@@ -81,6 +88,7 @@ fun TrainingPage() {
                     onSave = {
                         trainingViewModel.insert(newTraining)
                         showDialog = false
+                        newTraining = Training(date = LocalDate.now(), sportId = 0)
                     }
                 ) {
                     TrainingDialog(newTraining)
@@ -114,17 +122,18 @@ fun TrainingList(trainingViewModel: TrainingViewModel){
 
         }
     } else {
-        Text("noch keine Trainings aufgezeichnet.")
+        Text("Noch keine Trainings aufgezeichnet.")
     }
 }
 
 @Composable
 fun TrainingDialog(training: Training) {
+
+    val context = LocalContext.current
+
     var comment by remember {
         mutableStateOf("")
     }
-
-    val context = LocalContext.current
 
     var hour by remember {
         mutableStateOf(training.trainingTimeHour)
@@ -144,18 +153,38 @@ fun TrainingDialog(training: Training) {
         mutableStateOf(training.distanceUnit)
     }
 
+    var repeats by remember {
+        mutableStateOf(training.repeats)
+    }
+
+    var sets by remember {
+        mutableStateOf(training.sets)
+    }
+
+    var weight by remember {
+        mutableStateOf(training.weight)
+    }
+
+    var intensity by remember {
+        mutableStateOf(training.intensity)
+    }
+
     val sportViewModel: SportViewModel = hiltViewModel()
     val allSports = sportViewModel.sportList.collectAsState().value
 
-    val number: Int? = null
-
-    val selectedSport by remember {
+    var selectedSport by remember {
         mutableStateOf(
             if(allSports.isNotEmpty()) {
                 allSports.find { it.id == training.sportId } ?: allSports.first()
             } else {
-                Sport(1, "Wähle Sport", 1) // Dummy Sport gewählt, da emptyList Exception
-            })
+                Sport(name = "Wähle Sport") // Dummy Sport gewählt, da emptyList Exception
+            }
+        )
+    }
+
+    // Methode nötig, da allSports sonst zuerst immer leer ist und beim erneuten Durchlauf nicht angepasst wird.
+    if (allSports.isNotEmpty()){
+        selectedSport = allSports.find { it.id == training.sportId } ?: allSports.first()
     }
 
     val date by remember {
@@ -176,45 +205,131 @@ fun TrainingDialog(training: Training) {
 
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-        val trainings = sportViewModel.sportList.collectAsState().value
-        //val selectedSport = sportViewModel.getSportById(training.sportId)
-        Dropdown(
-            title = "Sportart",
-            list = allSports,
-            selectedItem = selectedSport
-        ){
-            training.sportId = (it as Sport).id!! //NPE bei Null
-        }
-
-        Spacer(modifier = Modifier.padding(vertical = 10.dp))
-
-        SecondsTimePicker(hour, minute, second) { hours, minutes, secoonds ->
-            hour = hours
-            minute = minutes
-            second = secoonds
-            training.trainingTimeHour = hour
-            training.trainingTimeMinutes = minute
-            training.trainingTimeSeconds = second
-        }
-
-        Spacer(modifier = Modifier.padding(vertical = 10.dp))
-
-        Row() {
-            val distance2 = distance / currentDistanceUnit.multiplicator
-
-            DistancePicker(distance2, training.distanceUnit) { dist, distUnit ->
-                distance = dist * distUnit.multiplicator
-                currentDistanceUnit = distUnit
-
-                training.trainingDistanceInMeters = distance
-                training.distanceUnit = currentDistanceUnit
+        // If-Klausel nötig, da ansonsten beim ersten Mal die Sportart nicht richtig geladen wird (da zuerst allSports-Liste leer ist)
+        if (allSports.isNotEmpty()) {
+            Dropdown(
+                title = "Sportart",
+                list = allSports,
+                selectedItem = selectedSport
+            ) {
+                selectedSport = it as Sport
+                training.sportId = selectedSport.id!! //NPE bei Null
             }
+        } else {
+            Text(text = "Noch keine Sportart erfasst.", color = Color.Red)
+        }
+
+        Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        if(selectedSport.hasTime) {
+            SecondsTimePicker(hour, minute, second) { hours, minutes, secoonds ->
+                hour = hours
+                minute = minutes
+                second = secoonds
+                training.trainingTimeHour = hour
+                training.trainingTimeMinutes = minute
+                training.trainingTimeSeconds = second
+            }
+
+            Spacer(modifier = Modifier.padding(vertical = 10.dp))
+        }
+
+        if(selectedSport.hasDistance) {
+            Row() {
+                val distance2 = distance / currentDistanceUnit.multiplicator
+
+                DistancePicker(distance2, training.distanceUnit) { dist, distUnit ->
+                    distance = dist * distUnit.multiplicator
+                    currentDistanceUnit = distUnit
+
+                    training.trainingDistanceInMeters = distance
+                    training.distanceUnit = currentDistanceUnit
+                }
+            }
+
+            Spacer(modifier = Modifier.padding(vertical = 10.dp))
+        }
+
+        if(selectedSport.hasNumberOfTimes) {
+
+            Row (horizontalArrangement = Arrangement.SpaceBetween) {
+
+                NumberInput(
+                    modifier = Modifier.weight(1f),
+                    label = "Wiederholungen",
+                    initialValue = repeats,
+                    onValueChange = {
+                        repeats = it
+                        training.repeats = repeats
+                    }
+                )
+
+                NumberInput(
+                    modifier = Modifier.weight(1f),
+                    label = "Sets",
+                    initialValue = sets,
+                    onValueChange = {
+                        sets = it
+                        training.sets = sets
+                    }
+                )
+
+                if (selectedSport.hasWeight) {
+                    NumberInput(
+                        modifier = Modifier.weight(1f),
+                        label = "Gewicht (kg)",
+                        initialValue = weight,
+                        onValueChange = {
+                            weight = it
+                            training.weight = weight
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.padding(vertical = 10.dp))
+
+        }
+
+        if (selectedSport.hasIntensity){
+            Text(text = "Intensität")
+
+            Slider(
+                value = intensity.toFloat(),
+                valueRange = 0f..5f,
+                steps = 4,
+                onValueChange = {
+                    intensity = it.roundToInt()
+                    training.intensity = intensity
+                })
+
+            var text = when (intensity) {
+                //if (intensity = 0f) {"keine Angabe"}
+                //if (0f < intensity < 1f) {"wenig anstrengend"}
+                0 -> "keine Angabe"
+                1 -> "wenig anstrengend"
+                2 -> "ein bisschen anstrengend"
+                3 -> "mittelmässig"
+                4 -> "eher schwer"
+                5 -> "schwer"
+                else -> {
+                    "unklar"
+                }
+            }
+            Text(
+                text = text,
+                modifier = Modifier.padding(start = 20.dp, top = 5.dp, bottom = 10.dp),
+                color = Color.Gray,
+                fontSize = 15.sp
+            )
+
+            Spacer(modifier = Modifier.padding(vertical = 10.dp))
         }
 
         OutlinedTextField(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp),
+                .fillMaxWidth(),
+            //.padding(top = 20.dp),
             label = { Text("Kommentar") },
             value = comment,
             onValueChange = {
@@ -227,64 +342,103 @@ fun TrainingDialog(training: Training) {
 
 @Composable
 private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingTypeMapping, trainingViewModel: TrainingViewModel) {
+
+    var editableTraining by remember {
+        mutableStateOf(trainingSportTrainingType.training)
+    }
+
+    var sport = trainingSportTrainingType.sport
+
     var showEditDialog by remember {
         mutableStateOf(false)
     }
 
     BaseCard(onClick = { showEditDialog = true }) {
-        CardContentRow(
-            //Modifier.clickable(onClick = TrainingDialog(training = trainingSportTrainingType.training)
-        ) {
-            CardContentColumn {
+        CardContentRow {
+            CardContentColumn(
+                modifier = Modifier.width(68.dp)
+            ) {
                 Icon(
-                    painterResource(id = R.drawable.running_48),
-                    contentDescription = "Standardicon"
+                    painterResource(id = R.drawable.running_55),
+                    contentDescription = "Trainingsicon"
                 )
             }
-            CardContentColumn {
-                Text(trainingSportTrainingType.sport.name) //Name des Sports
-                val dateAsString = trainingSportTrainingType.training.date.getFormattedString() //Datum des Sports
+            CardContentColumn(
+                modifier = Modifier.width(165.dp)
+            ) {
+                Text(
+                    text = sport.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 19.sp
+                )
+                val dateAsString = editableTraining.date.getFormattedString() //Datum des Sports
                 Text(dateAsString)
             }
-            CardContentColumn {
-                val trainingsID = trainingSportTrainingType.sport.trainingTypeId //ID der Kategorie
-                //val trainingType = trainingTypeDao.get(trainingsID)
-                //Text(trainingType.name)
-                //val trainingTime = a.key.getFormattedTrainingTime() ?: "no Training time" // Trainingszeit falls vorhanden
-                //Text(trainingTime)
-                //val distance = a.key.getFormattedTrainingDistance() ?: a.key.intensity ?: "no data"
-                //Text("$distance")
-                // Übergangslösung
-                val timeH = trainingSportTrainingType.training.trainingTimeHour
-                val timeM = trainingSportTrainingType.training.trainingTimeMinutes
-                val timeS = trainingSportTrainingType.training.trainingTimeSeconds
-                if (timeH != null || timeM != null) { // keine Sekundenangabe, da zu detailliert
-                    if (timeH != null && timeM != null) {
-                        Text("$timeH h $timeM min" )
-                    } else if (timeH == null){
-                        Text("$timeM min" )
-                    } else if (timeM == null) {
-                        Text("$timeH h")
+            CardContentColumn(
+                modifier = Modifier.width(100.dp)
+            ) {
+                // Nur zwei Daten sollen sichtbar sein
+                var count = 0
+
+                if (sport.hasTime && count < 2) {
+                    val timeH = editableTraining.trainingTimeHour
+                    val timeM = editableTraining.trainingTimeMinutes
+                    val timeS = editableTraining.trainingTimeSeconds
+
+                    if (timeH != 0) {
+                        Text("$timeH h $timeM min")
+                    } else if (timeH == 0 && timeS == 0) {
+                        Text("$timeM min")
+                    } else if (timeM != 0 && timeS != 0) {
+                        Text("$timeM min $timeS s")
+                    } else if (timeS != 0) {
+                        Text("$timeS s")
                     }
-                } else (Text("keine Zeitangabe"))
-                val distance = trainingSportTrainingType.training.trainingDistanceInMeters
-                if (distance != null) {
+
+                    count++
+                }
+
+                if (sport.hasDistance && count < 2) {
+                    val distance = editableTraining.trainingDistanceInMeters
                     if (distance >= 1000) {
-                        val distanceKm: Float = distance.toFloat() / 1000
+                        val distanceKm = distance / DistanceUnit.KILOMETERS.multiplicator
                         Text("$distanceKm km")
                     } else {
                         Text("$distance m")
                     }
-                } else (Text("keine Distanzangabe"))
 
+                    count++
+                }
+
+                if (sport.hasNumberOfTimes && count < 2) {
+                    val repeats = editableTraining.repeats
+                    val sets = trainingSportTrainingType.training.sets
+                    if (sets == 0) {
+                        Text("$repeats Reps")
+                    } else {
+                        Text("$sets x $repeats Reps")
+                    }
+
+                    count++
+
+                    if (sport.hasWeight && count < 2) {
+                        val weight = editableTraining.weight
+                        Text("$weight kg")
+
+                        count++
+                    }
+                }
+
+                if (sport.hasIntensity && count < 2) {
+                    val intensity = editableTraining.intensity
+                    if (intensity > 0) { // bei keiner Angabe wird nichts aufgeführt
+                        Text("Intensität: $intensity")
+                    }
+
+                    count++
+                }
             }
         }
-    }
-
-    val context = LocalContext.current
-
-    var editableTraining by remember {
-        mutableStateOf(Training(date = LocalDate.now(), sportId = 0))
     }
 
     if (showEditDialog) {
@@ -295,26 +449,9 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
             onSave = {
                 trainingViewModel.update(editableTraining)
                 showEditDialog = false
-                editableTraining = Training(date = LocalDate.now(), sportId = 0)
             }
         ) {
             TrainingDialog(training = editableTraining,)
         }
     }
-
-    //if (showEditDialog) {
-    //    FullScreenDialog(
-    //        title = "Training bearbeiten",
-    //        goal = training,
-    //        sportViewModel = trainingViewModel,
-    //        visibilityChange = { visibility -> showEditDialog = visibility }
-    //    ) { validationSuccessful, validationMessage ->
-    //        if (!validationSuccessful) {
-    //            Toast.makeText(context, validationMessage, Toast.LENGTH_LONG).show()
-    //        } else {
-    //            trainingViewModel.update(training)
-    //            showDialog = false
-    //        }
-    //    }
-    //}
 }

@@ -61,7 +61,9 @@ fun CardTitleRow(content: @Composable () -> Unit) {
 
 @Composable
 fun CardContentRow(content: @Composable () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(),
+    Row(modifier = Modifier
+        .height(IntrinsicSize.Min)
+        .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top) {
 
@@ -70,18 +72,14 @@ fun CardContentRow(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun CardContentColumn(content: @Composable () -> Unit) {
-    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.padding(15.dp)) {
-        content()
-    }
-}
-
-@Composable
-fun TextTitle(content: @Composable () -> Unit){
+fun CardContentColumn(modifier: Modifier, content: @Composable () -> Unit) {
     Column(
-        modifier = Modifier
-        .padding(7.dp)
-        .fillMaxWidth()) {
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier
+            .padding(5.dp,15.dp, 5.dp, 15.dp)
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.Center
+    ) {
         content()
     }
 }

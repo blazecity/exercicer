@@ -1,5 +1,6 @@
 package ch.mobpro.exercicer.components
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -573,6 +575,8 @@ inline fun <reified T: Number> NumberInput(
         mutableStateOf(false)
     }
 
+    val context = LocalContext.current
+
     OutlinedTextField(
         modifier = modifier.padding(end = 10.dp),
         textStyle = TextStyle(textAlign = TextAlign.Right),
@@ -584,9 +588,13 @@ inline fun <reified T: Number> NumberInput(
                 isError = true
             } else {
                 isError = false
-                when (T::class) {
-                    Float::class -> value = it.toFloat() as T
-                    Int::class -> value = it.toInt() as T
+                try {
+                    when (T::class) {
+                        Float::class -> value = it.toFloat() as T
+                        Int::class -> value = it.toInt() as T
+                    }
+                } catch (e: java.lang.NumberFormatException) {
+                    Toast.makeText(context, "Es muss ein Zahlenwert eingegeben werden.", Toast.LENGTH_SHORT).show()
                 }
                 onValueChange(value)
             }

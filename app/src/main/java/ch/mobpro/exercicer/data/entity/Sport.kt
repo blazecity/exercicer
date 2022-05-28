@@ -24,7 +24,8 @@ data class Sport(
     var hasTime: Boolean = false,
     var hasDistance: Boolean = false,
     var hasNumberOfTimes: Boolean = false,
-    var hasWeight: Boolean = false
+    var hasWeight: Boolean = false,
+    var hasIntensity: Boolean = false
 ): Comparable<Sport>, Listable {
     override fun toString(): String {
         return this.name
