@@ -113,7 +113,7 @@ fun TrainingList(trainingViewModel: TrainingViewModel, sportList: List<Sport>){
 fun TrainingDialog(training: Training, allSports: List<Sport>) {
 
     var comment by remember {
-        mutableStateOf("")
+        mutableStateOf(training.comment)
     }
 
     var hour by remember {
