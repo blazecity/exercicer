@@ -13,4 +13,5 @@
 - Room DB for persistence
 - Jetpack Compose for UI elements
 - Material Design
+- Unit Tests
 
