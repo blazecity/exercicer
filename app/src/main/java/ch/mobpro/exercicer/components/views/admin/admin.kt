@@ -40,6 +40,7 @@ fun AdminNavigationController() {
         mutableStateOf(false)
     }
 
+    val trainingTypeList = trainingTypeViewModel.trainingTypeList.collectAsState().value
     NavHost(navController, startDestination = AdminRoute.OVERVIEW.route) {
         composable(AdminRoute.OVERVIEW.route) {
             AdminPage(navController = navController)
@@ -57,7 +58,7 @@ fun AdminNavigationController() {
                     mutableStateOf(TrainingType(name = ""))
                 }
 
-                TrainingTypeList(trainingTypeViewModel)
+                TrainingTypeList(trainingTypeViewModel, trainingTypeList)
 
                 if (showDialog) {
 
@@ -79,7 +80,6 @@ fun AdminNavigationController() {
 
         composable(AdminRoute.SPORTS.route) {
             val context = LocalContext.current
-            val trainingTypeList = trainingTypeViewModel.trainingTypeList.collectAsState().value
 
             DetailPage(
                 title = "Sportarten",

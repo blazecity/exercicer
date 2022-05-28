@@ -25,13 +25,13 @@ class SportViewModel @Inject constructor(private val repository: SportRepository
     init {
         viewModelScope.launch {
             repository.getAll().distinctUntilChanged().collect { list ->
-                if (!list.isNullOrEmpty()) _sportList.value = list
+                if (list.isNotEmpty()) _sportList.value = list
             }
         }
 
         viewModelScope.launch {
             repository.getAllJoined().distinctUntilChanged().collect { map ->
-                if (!map.isNullOrEmpty()) _sportsMap.value = map
+                if (map.isNotEmpty()) _sportsMap.value = map
             }
         }
     }

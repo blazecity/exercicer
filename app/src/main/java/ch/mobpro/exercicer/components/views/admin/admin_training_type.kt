@@ -9,13 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ch.mobpro.exercicer.components.FullScreenDialog
 import ch.mobpro.exercicer.components.ListDeleteAction
+import ch.mobpro.exercicer.components.Listable
 import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.viewmodel.TrainingTypeViewModel
 
 @Composable
-fun TrainingTypeList(viewModel: TrainingTypeViewModel) {
-    val items = viewModel.trainingTypeList.collectAsState().value
-
+fun TrainingTypeList(viewModel: TrainingTypeViewModel, items: List<TrainingType>) {
     var showEditDialog by remember {
         mutableStateOf(false)
     }

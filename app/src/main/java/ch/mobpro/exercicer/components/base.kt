@@ -203,66 +203,59 @@ interface Listable {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ListDeleteAction(list: MutableList<Listable>, dismissAction: (Listable) -> Unit, onClick: (Listable) -> Unit) {
-    var emptyList by remember {
-        mutableStateOf(list.isEmpty())
-    }
+    ListSection {
+        LazyColumn(Modifier.scrollable(rememberScrollState(), orientation = Orientation.Vertical)) {
+            itemsIndexed(list, key = {_, listItem -> listItem.id!!}, itemContent = {index, item ->
+                val dismissState = rememberDismissState()
+                if (dismissState.isDismissed(DismissDirection.EndToStart)) {
+                    dismissAction(item)
+                    list.remove(item)
+                }
 
-    if (!emptyList) {
-        ListSection {
-            LazyColumn(Modifier.scrollable(rememberScrollState(), orientation = Orientation.Vertical)) {
-                itemsIndexed(list, key = {_, listItem -> listItem.id!!}, itemContent = {index, item ->
-                    val dismissState = rememberDismissState()
-                    if (dismissState.isDismissed(DismissDirection.EndToStart)) {
-                        dismissAction(item)
-                        list.remove(item)
-                        emptyList = list.isEmpty()
-                    }
+                SwipeToDismiss(
+                    state = dismissState,
+                    directions = setOf(DismissDirection.EndToStart),
+                    dismissThresholds = {
+                        FractionalThreshold(if (it == DismissDirection.EndToStart) 0.1f else 0.05f)
+                    },
+                    background = {
+                        val color by animateColorAsState(
+                            when (dismissState.targetValue) {
+                                DismissValue.Default -> Color.White
+                                else -> LightRed
+                            }
+                        )
 
-                    SwipeToDismiss(
-                        state = dismissState,
-                        directions = setOf(DismissDirection.EndToStart),
-                        dismissThresholds = {
-                            FractionalThreshold(if (it == DismissDirection.EndToStart) 0.1f else 0.05f)
-                        },
-                        background = {
-                            val color by animateColorAsState(
-                                when (dismissState.targetValue) {
-                                    DismissValue.Default -> Color.White
-                                    else -> LightRed
-                                }
-                            )
-
-                            val scale by animateFloatAsState(
-                                if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
-                            )
-                            Box(
+                        val scale by animateFloatAsState(
+                            if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "delete icon",
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "delete icon",
-                                    modifier = Modifier
-                                        .scale(scale)
-                                        .padding(end = 7.dp)
-                                )
-                            }
-                        }
-                    ) {
-                        Row(modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White)) {
-                            ListItem(title = item.toString(), onClick = { onClick(item) })
-
-                            if (index < list.size - 1) {
-                                ListDivider()
-                            }
+                                    .scale(scale)
+                                    .padding(end = 7.dp)
+                            )
                         }
                     }
-                })
-            }
+                ) {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)) {
+                        ListItem(title = item.toString(), onClick = { onClick(item) })
+
+                        if (index < list.size - 1) {
+                            ListDivider()
+                        }
+                    }
+                }
+            })
         }
     }
 }

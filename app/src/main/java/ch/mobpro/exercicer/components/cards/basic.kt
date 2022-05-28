@@ -78,7 +78,7 @@ fun CardContentColumn(modifier: Modifier, content: @Composable () -> Unit) {
         modifier = modifier
             .padding(5.dp,15.dp, 5.dp, 15.dp)
             .fillMaxHeight(),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
         content()
     }

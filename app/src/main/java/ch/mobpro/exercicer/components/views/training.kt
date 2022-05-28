@@ -1,64 +1,46 @@
 package ch.mobpro.exercicer.components.views
 
-import android.content.Context
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
-import androidx.hilt.navigation.compose.hiltViewModel
-import ch.mobpro.exercicer.components.*
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ch.mobpro.exercicer.R
-import ch.mobpro.exercicer.components.cards.*
+import ch.mobpro.exercicer.components.*
+import ch.mobpro.exercicer.components.cards.BaseCard
+import ch.mobpro.exercicer.components.cards.CardContentColumn
+import ch.mobpro.exercicer.components.cards.CardContentRow
+import ch.mobpro.exercicer.components.cards.SmallBadge
 import ch.mobpro.exercicer.components.date.DatePickerField
-import ch.mobpro.exercicer.components.views.admin.TrainingTypeDialog
-import ch.mobpro.exercicer.components.views.goals.FullScreenGoalDialog
-import ch.mobpro.exercicer.components.views.goals.GoalCard
-import ch.mobpro.exercicer.components.views.goals.GoalsList
-import ch.mobpro.exercicer.data.entity.*
+import ch.mobpro.exercicer.data.entity.DistanceUnit
+import ch.mobpro.exercicer.data.entity.Sport
+import ch.mobpro.exercicer.data.entity.Training
+import ch.mobpro.exercicer.data.entity.TrainingType
 import ch.mobpro.exercicer.data.entity.mapping.TrainingSportTrainingTypeMapping
-import ch.mobpro.exercicer.data.util.getFormattedString
+import ch.mobpro.exercicer.data.util.*
 import ch.mobpro.exercicer.viewmodel.SportViewModel
-import ch.mobpro.exercicer.viewmodel.TrainingTypeViewModel
 import ch.mobpro.exercicer.viewmodel.TrainingViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.selects.select
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
 @Composable
 fun TrainingPage() {
     val trainingViewModel: TrainingViewModel = hiltViewModel()
+    val sportViewModel: SportViewModel = hiltViewModel()
+    val sportList = sportViewModel.sportList.collectAsState().value
+    val context = LocalContext.current
 
     var showDialog by remember {
         mutableStateOf(false) // false setzen, wenn anders implementiert
@@ -71,14 +53,20 @@ fun TrainingPage() {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                showDialog = true
+                if (sportList.isEmpty()) {
+                    Toast.makeText(
+                        context,
+                        "Es sind keine Sportarten erfasst",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else showDialog = true
             }) {
                 Icon(Icons.Default.Add, "add button")
             }
         }
     ) { paddingValues ->
         Page(modifier = Modifier.padding(paddingValues), title = "Training") {
-            TrainingList(trainingViewModel)
+            TrainingList(trainingViewModel, sportList)
 
             if (showDialog) {
                 FullScreenDialog(
@@ -91,7 +79,7 @@ fun TrainingPage() {
                         newTraining = Training(date = LocalDate.now(), sportId = 0)
                     }
                 ) {
-                    TrainingDialog(newTraining)
+                    TrainingDialog(newTraining, sportList)
                 }
             }
         }
@@ -99,16 +87,11 @@ fun TrainingPage() {
 }
 
 @Composable
-fun TrainingEdit(trainingViewModel: TrainingViewModel){
-
-}
-
-@Composable
-fun TrainingList(trainingViewModel: TrainingViewModel){
+fun TrainingList(trainingViewModel: TrainingViewModel, sportList: List<Sport>){
     val trainingList = trainingViewModel.trainingList.collectAsState().value
-    TrainingEdit(trainingViewModel)
+
     if (trainingList.isNotEmpty()){
-        LazyColumn() {
+        LazyColumn {
             items(trainingList, key = {item -> item.training.id!!}, itemContent = { item ->
                 ItemDeleteAction(
                     item = item.training,
@@ -116,7 +99,7 @@ fun TrainingList(trainingViewModel: TrainingViewModel){
                         trainingViewModel.delete(trainingToDismiss as Training)
                     }
                 ) {
-                    DoTrainingCards(item, trainingViewModel)
+                    DoTrainingCards(item, trainingViewModel, sportList)
                 }
             })
 
@@ -127,9 +110,7 @@ fun TrainingList(trainingViewModel: TrainingViewModel){
 }
 
 @Composable
-fun TrainingDialog(training: Training) {
-
-    val context = LocalContext.current
+fun TrainingDialog(training: Training, allSports: List<Sport>) {
 
     var comment by remember {
         mutableStateOf("")
@@ -169,17 +150,10 @@ fun TrainingDialog(training: Training) {
         mutableStateOf(training.intensity)
     }
 
-    val sportViewModel: SportViewModel = hiltViewModel()
-    val allSports = sportViewModel.sportList.collectAsState().value
-
     var selectedSport by remember {
-        mutableStateOf(
-            if(allSports.isNotEmpty()) {
-                allSports.find { it.id == training.sportId } ?: allSports.first()
-            } else {
-                Sport(name = "Wähle Sport") // Dummy Sport gewählt, da emptyList Exception
-            }
-        )
+        val sport = allSports.find { it.id == training.sportId } ?: allSports.firstOrNull() ?: Sport(name = "")
+        training.sportId = sport.id!!
+        mutableStateOf(sport)
     }
 
     // Methode nötig, da allSports sonst zuerst immer leer ist und beim erneuten Durchlauf nicht angepasst wird.
@@ -341,13 +315,17 @@ fun TrainingDialog(training: Training) {
 }
 
 @Composable
-private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingTypeMapping, trainingViewModel: TrainingViewModel) {
+private fun DoTrainingCards(
+    trainingSportTrainingType: TrainingSportTrainingTypeMapping,
+    trainingViewModel: TrainingViewModel? = null,
+    sportList: List<Sport>
+) {
 
-    var editableTraining by remember {
+    val editableTraining by remember {
         mutableStateOf(trainingSportTrainingType.training)
     }
 
-    var sport = trainingSportTrainingType.sport
+    val sport = trainingSportTrainingType.sport
 
     var showEditDialog by remember {
         mutableStateOf(false)
@@ -366,51 +344,31 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
             CardContentColumn(
                 modifier = Modifier.width(165.dp)
             ) {
-                Text(
-                    text = sport.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 19.sp
-                )
+                SmallBadge(content = sport.name)
                 val dateAsString = editableTraining.date.getFormattedString() //Datum des Sports
                 Text(dateAsString)
             }
             CardContentColumn(
                 modifier = Modifier.width(100.dp)
             ) {
-                // Nur zwei Daten sollen sichtbar sein
-                var count = 0
-
-                if (sport.hasTime && count < 2) {
+                if (sport.hasTime) {
                     val timeH = editableTraining.trainingTimeHour
                     val timeM = editableTraining.trainingTimeMinutes
                     val timeS = editableTraining.trainingTimeSeconds
 
-                    if (timeH != 0) {
-                        Text("$timeH h $timeM min")
-                    } else if (timeH == 0 && timeS == 0) {
-                        Text("$timeM min")
-                    } else if (timeM != 0 && timeS != 0) {
-                        Text("$timeM min $timeS s")
-                    } else if (timeS != 0) {
-                        Text("$timeS s")
-                    }
-
-                    count++
+                    Text(getFormattedTime(timeH, timeM, timeS))
                 }
 
-                if (sport.hasDistance && count < 2) {
+                if (sport.hasDistance) {
                     val distance = editableTraining.trainingDistanceInMeters
                     if (distance >= 1000) {
-                        val distanceKm = distance / DistanceUnit.KILOMETERS.multiplicator
-                        Text("$distanceKm km")
+                        Text(getFormattedDistance(distance)!!)
                     } else {
-                        Text("$distance m")
+                        Text(getFormattedDistance(distance, DistanceUnit.METERS)!!)
                     }
-
-                    count++
                 }
 
-                if (sport.hasNumberOfTimes && count < 2) {
+                if (sport.hasNumberOfTimes) {
                     val repeats = editableTraining.repeats
                     val sets = trainingSportTrainingType.training.sets
                     if (sets == 0) {
@@ -419,23 +377,17 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
                         Text("$sets x $repeats Reps")
                     }
 
-                    count++
-
-                    if (sport.hasWeight && count < 2) {
+                    if (sport.hasWeight) {
                         val weight = editableTraining.weight
-                        Text("$weight kg")
-
-                        count++
+                        Text(getFormattedWeight(weight))
                     }
                 }
 
-                if (sport.hasIntensity && count < 2) {
+                if (sport.hasIntensity) {
                     val intensity = editableTraining.intensity
                     if (intensity > 0) { // bei keiner Angabe wird nichts aufgeführt
                         Text("Intensität: $intensity")
                     }
-
-                    count++
                 }
             }
         }
@@ -447,11 +399,11 @@ private fun DoTrainingCards(trainingSportTrainingType: TrainingSportTrainingType
             visible = showEditDialog,
             onClose = { showEditDialog = false },
             onSave = {
-                trainingViewModel.update(editableTraining)
+                trainingViewModel?.update(editableTraining)
                 showEditDialog = false
             }
         ) {
-            TrainingDialog(training = editableTraining,)
+            TrainingDialog(training = editableTraining, sportList)
         }
     }
 }
