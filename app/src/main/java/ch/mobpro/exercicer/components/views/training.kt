@@ -43,7 +43,7 @@ fun TrainingPage() {
     val context = LocalContext.current
 
     var showDialog by remember {
-        mutableStateOf(false) // false setzen, wenn anders implementiert
+        mutableStateOf(false)
     }
 
     var newTraining by remember {
@@ -174,15 +174,13 @@ fun TrainingDialog(training: Training, allSports: List<Sport>) {
 
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
-        // If-Klausel nötig, da ansonsten beim ersten Mal die Sportart nicht richtig geladen wird (da zuerst allSports-Liste leer ist)
-        //if (allSports.isNotEmpty()) {
-            Dropdown(
-                title = "Sportart",
-                list = allSports,
-                selectedItem = selectedSport
-            ) {
-                selectedSport = it as Sport
-                training.sportId = selectedSport.id!! //NPE bei Null
+        Dropdown(
+            title = "Sportart",
+            list = allSports,
+            selectedItem = selectedSport
+        ) {
+            selectedSport = it as Sport
+            training.sportId = selectedSport.id!! //NPE bei Null
         }
 
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
@@ -270,8 +268,6 @@ fun TrainingDialog(training: Training, allSports: List<Sport>) {
                 })
 
             var text = when (intensity) {
-                //if (intensity = 0f) {"keine Angabe"}
-                //if (0f < intensity < 1f) {"wenig anstrengend"}
                 0 -> "keine Angabe"
                 1 -> "wenig anstrengend"
                 2 -> "ein bisschen anstrengend"

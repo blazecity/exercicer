@@ -30,7 +30,7 @@ data class Training(
     var sets: Int = 0,
     var repeats: Int = 0,
     var weight: Float = 0f,
-    var intensity: Int = 0,  // soll nur bis 10 gehen
+    var intensity: Int = 0,
     var comment: String = ""
 ) : Listable
 
