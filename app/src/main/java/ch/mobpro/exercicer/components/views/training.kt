@@ -156,11 +156,6 @@ fun TrainingDialog(training: Training, allSports: List<Sport>) {
         mutableStateOf(sport)
     }
 
-    // Methode nötig, da allSports sonst zuerst immer leer ist und beim erneuten Durchlauf nicht angepasst wird.
-    if (allSports.isNotEmpty()){
-        selectedSport = allSports.find { it.id == training.sportId } ?: allSports.first()
-    }
-
     val date by remember {
         mutableStateOf(LocalDate.now())
     }
@@ -180,7 +175,7 @@ fun TrainingDialog(training: Training, allSports: List<Sport>) {
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
 
         // If-Klausel nötig, da ansonsten beim ersten Mal die Sportart nicht richtig geladen wird (da zuerst allSports-Liste leer ist)
-        if (allSports.isNotEmpty()) {
+        //if (allSports.isNotEmpty()) {
             Dropdown(
                 title = "Sportart",
                 list = allSports,
@@ -188,9 +183,6 @@ fun TrainingDialog(training: Training, allSports: List<Sport>) {
             ) {
                 selectedSport = it as Sport
                 training.sportId = selectedSport.id!! //NPE bei Null
-            }
-        } else {
-            Text(text = "Noch keine Sportart erfasst.", color = Color.Red)
         }
 
         Spacer(modifier = Modifier.padding(vertical = 10.dp))

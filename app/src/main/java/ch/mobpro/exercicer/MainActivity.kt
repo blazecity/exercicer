@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // persistData()
+        //persistData()
         setContent {
             ExercicerTheme {
                 NavigationController()
@@ -40,53 +40,84 @@ class MainActivity : ComponentActivity() {
 
     // sample data
     private fun persistData() {
-        val trainingType1 = TrainingType(1, "Training Type 1")
-        val trainingType2 = TrainingType(2, "Training Type 2")
+        val trainingType1 = TrainingType(id = 1,name = "Ausdauer")
+        val trainingType2 = TrainingType(id = 2,name =  "Kraft")
+        val trainingType3 = TrainingType(id = 3,name =  "Training")
         trainingTypeViewModel.insert(trainingType1)
         trainingTypeViewModel.insert(trainingType2)
+        trainingTypeViewModel.insert(trainingType3)
 
-        val sport1 = Sport(3, "Sport 1", trainingType1.id!!)
-        val sport2 = Sport(4, "Sport 2", trainingType2.id!!)
-        val sport3 = Sport(5, "Sport 3", trainingType2.id)
+        val sport1 = Sport(id = 4, name = "Joggen", trainingTypeId = trainingType1.id!!)
+        val sport2 = Sport(id = 5,name =  "Beinpresse", trainingTypeId = trainingType2.id!!)
+        val sport3 = Sport(id = 6,name =  "Liegestütze", trainingTypeId = trainingType2.id)
+        val sport4 = Sport(id = 7,name =  "Fussballtraining", trainingTypeId = trainingType3.id)
+
+        sport1.hasDistance = true
+        sport1.hasTime = true
+        sport2.hasNumberOfTimes = true
+        sport2.hasWeight = true
+        sport2.hasIntensity = true
+        sport3.hasNumberOfTimes = true
+        sport3.hasIntensity = true
+        sport4.hasTime = true
+        sport4.hasIntensity = true
+
         sportViewModel.insert(sport1)
         sportViewModel.insert(sport2)
         sportViewModel.insert(sport3)
+        sportViewModel.insert(sport4)
 
-        val training1 = Training(6,
-            LocalDate.of(2021, 4, 6), // 06/04/2021
-            sport1.id!!,
+        val training1 = Training(
+            id = 8,
+            date = LocalDate.of(2021, 4, 6), // 06/04/2021
+            sportId = sport1.id!!,
             trainingTimeMinutes = 20,
             trainingTimeSeconds = 20,
-            trainingDistanceInMeters = 10f,
-            sets = 2,
-            repeats = 12,
-            weight = 20f
+            trainingDistanceInMeters = 1000f
         )
 
-        val training2 = Training(7,
-            LocalDate.of(2022, 2, 3), // 03/02/2022
-            sport1.id,
+        val training2 = Training(
+            id = 9,
+            date = LocalDate.of(2022, 2, 3), // 03/02/2022
+            sportId = sport2.id!!,
             trainingTimeHour = 2,
             sets = 3,
-            repeats = 12,
-            weight = 40f
+            repeats = 12
         )
 
-        val training3 = Training(8,
-            LocalDate.of(2022, 2, 4), // 04/02/2022
-            sport2.id!!,
-            trainingTimeMinutes = 34)
+        val training3 = Training(
+            id = 10,
+            date = LocalDate.of(2022, 2, 4), // 04/02/2022
+            sportId = sport3.id!!,
+            trainingTimeMinutes = 34,
+            sets = 3,
+            repeats = 20,
+            weight = 120f
+        )
 
-        val training4 = Training(9,
-            LocalDate.of(2022, 3, 17), // 17/03/2022
-            sport3.id!!,
+        val training4 = Training(
+            id = 11,
+            date = LocalDate.of(2022, 3, 17), // 17/03/2022
+            sportId = sport1.id!!,
+            trainingTimeMinutes = 43,
+            trainingTimeSeconds = 12,
+            trainingDistanceInMeters = 8400f
+        )
+
+        val training5 = Training(
+            id = 12,
+            date = LocalDate.of(2022, 5, 6), // 17/03/2022
+            sportId = sport4.id!!,
             trainingTimeHour = 3,
-            trainingTimeSeconds = 4)
+            trainingTimeSeconds = 4,
+            intensity = 3
+        )
 
         trainingViewModel.insert(training1)
         trainingViewModel.insert(training2)
         trainingViewModel.insert(training3)
         trainingViewModel.insert(training4)
+        trainingViewModel.insert(training5)
 
         val goal1 = Goal(
             start = LocalDate.of(2021, 4, 6),
@@ -96,7 +127,6 @@ class MainActivity : ComponentActivity() {
             distanceUnit = DistanceUnit.KILOMETERS,
             trainingTimeGoalHours = 3,
             numberOfTimesGoal = 2,
-            weightGoal = 41.5f
         )
 
         val goal2 = Goal(

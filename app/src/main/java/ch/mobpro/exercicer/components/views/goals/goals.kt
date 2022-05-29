@@ -263,7 +263,7 @@ fun GoalsList(
     )
 
     LazyColumn {
-        items(if (showArchivedGoals) expiredGoals else activeGoals,
+        items(if (showArchivedGoals) activeGoals else expiredGoals, // activeGolas und expiredGoals vertauscht, so stimmt Logik beim Testing
             key = {item -> item.goal.id!!},
             itemContent = { item ->
                 ItemDeleteAction(
